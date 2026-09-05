@@ -9,7 +9,7 @@ import { batteryController, type BatteryRun } from '../battery/batteryController
 import { saveBatteryRun, loadBatteryHistory, type BatteryRunRow } from '../lib/batteryHistory';
 import { getStoredAgeBand, setStoredAgeBand } from '../lib/userSettings';
 import { type AgeBand, BATTERY } from '../lib/batteryDistributions';
-import { getAuthState } from '../lib/auth';
+import { getAuthState, onAuthChange } from '../lib/auth';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
 
 const AGE_BANDS: AgeBand[] = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
@@ -216,17 +216,28 @@ export const transferPage: PageModule = {
       activeDispose = batteryController.mount(host, band, async (run: BatteryRun) => {
         // Save and refresh history
         const res = await saveBatteryRun(run);
-        if (!res.ok && res.needsMigration) {
-          // Show a banner inside the controller host
+        if (!res.ok) {
+          // Show a banner inside the controller host explaining the save state
           const banner = document.createElement('div');
           banner.className = 'battery-migration battery-migration--inline';
-          banner.innerHTML = `
-            <div class="t-eyebrow">Not saved</div>
-            <p>Your results are shown above, but the <code>battery_runs</code> table doesn't exist yet. Run <code>supabase/migrations/0002_battery.sql</code> in the Supabase SQL editor to enable persistence. Refresh the page after running it.</p>`;
+          if (res.needsMigration) {
+            banner.innerHTML = `
+              <div class="t-eyebrow">Not saved</div>
+              <p>Your results are shown above, but the <code>battery_runs</code> table doesn't exist yet. Run <code>supabase/migrations/0002_battery.sql</code> in the Supabase SQL editor to enable persistence. Refresh the page after running it.</p>`;
+          } else if (res.error === 'Not signed in') {
+            banner.innerHTML = `
+              <div class="t-eyebrow">Not saved — anonymous</div>
+              <p>Your results are shown above, but you're browsing anonymously. The transfer battery will save automatically once Supabase's anonymous auth completes (usually within a second of opening the page). Refresh and try again if the banner persists.</p>`;
+          } else if (res.error === 'Supabase not configured') {
+            banner.innerHTML = `
+              <div class="t-eyebrow">Not saved</div>
+              <p>Your results are shown above, but Supabase isn't configured. Set <code>VITE_SUPABASE_URL</code> in <code>.env</code> to enable persistence.</p>`;
+          } else {
+            banner.innerHTML = `
+              <div class="t-eyebrow">Not saved</div>
+              <p>Your results are shown above, but the save failed: <code>${res.error}</code></p>`;
+          }
           host.appendChild(banner);
-        } else if (!res.ok) {
-          // eslint-disable-next-line no-console
-          console.info('[transfer] battery save skipped:', res.error);
         }
         await refreshHistory();
         // After save, the controller has already shown the results — keep them visible.
@@ -243,11 +254,18 @@ export const transferPage: PageModule = {
       const histHost = document.querySelector<HTMLElement>('[data-transfer-history]');
       if (!histHost) return;
       const auth = getAuthState();
+      if (auth.status === 'loading') {
+        histHost.innerHTML = `
+          <div class="container">
+            <div class="battery-history-empty">Connecting to the lab…</div>
+          </div>`;
+        return;
+      }
       if (auth.status !== 'signed-in' || !SUPABASE_CONFIGURED) {
         histHost.innerHTML = `
           <div class="container">
             <div class="battery-history-empty">
-              History will appear here after you sign in and complete a battery. Without an account, runs are not saved.
+              History will appear here after the lab connects and you complete a battery. Without a connection, runs are not saved.
             </div>
           </div>`;
         return;
@@ -305,6 +323,10 @@ create policy "battery_insert_own" on public.battery_runs
     // Initial mount
     mountBatteryWith(storedBand);
     await refreshHistory();
+
+    // Refresh history when auth state changes (loading → signed-in)
+    const offAuth = onAuthChange(() => { void refreshHistory(); });
+    cleanups.push(offAuth);
 
     cleanups.push(() => { if (activeDispose) activeDispose(); });
     return () => cleanups.forEach((c) => c());
