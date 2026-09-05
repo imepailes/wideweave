@@ -54,6 +54,14 @@ function renderYourProfile(inApp: InAppSummary, battery: { rows: number; latest:
             <div class="profile__battery">${batLine}</div>
             <a class="btn btn--ghost profile__battery-cta" href="/transfer">${battery.rows === 0 ? 'Take the transfer battery' : 'See full battery results'} →</a>
           </div>
+          <div class="profile__col">
+            <span class="t-eyebrow">Spaced recall</span>
+            <div class="profile__drill">
+              <div class="profile__drill-num" data-drill-due>—</div>
+              <div class="profile__drill-label">items due today</div>
+            </div>
+            <a class="btn btn--ghost profile__battery-cta" href="/drill" data-drill-cta>Open the drill →</a>
+          </div>
         </div>
       </div>
     </section>`;
@@ -323,6 +331,13 @@ export const landingPage: PageModule = {
         latest: meanPct,
         latestAt: latestRow?.created_at ?? null
       });
+      // After render, fill the drill-due count
+      const { loadDueItems } = await import('../lib/spacedRecall');
+      const [ratDue, cjDue] = await Promise.all([loadDueItems('rat', 50), loadDueItems('cj', 50)]);
+      const dueEl = profileHost.querySelector<HTMLElement>('[data-drill-due]');
+      if (dueEl) dueEl.textContent = String(ratDue.length + cjDue.length);
+      const cta = profileHost.querySelector<HTMLElement>('[data-drill-cta]');
+      if (cta) cta.textContent = ratDue.length + cjDue.length === 0 ? 'See the drill →' : 'Open the drill →';
     }
     await refreshProfile();
     const offAuth = onAuthChange(() => { void refreshProfile(); });

@@ -136,11 +136,11 @@ export const ratPage: PageModule = {
       <div class="container">
         <div class="module-next__inner">
           <div>
-            <span class="t-eyebrow">Next module</span>
-            <h3 class="t-h3">Concept Jump</h3>
-            <p>Click or type your way from a start concept to a target across a real knowledge graph. Scored against the shortest route.</p>
+            <span class="t-eyebrow">Spaced recall</span>
+            <h3 class="t-h3">Each puzzle is an item.</h3>
+            <p>Every puzzle you see in this module is recorded as an item in your spaced-recall bank. Puzzles come back in <a href="/drill">/drill</a> when their half-life elapses. A correct recall multiplies the half-life by 1.7; a missed recall halves it. Take this module a few times and your bank fills up.</p>
           </div>
-          <a class="btn btn--primary" href="/modules/concept-jump">Open Concept Jump →</a>
+          <a class="btn btn--primary" href="/drill">Open the drill →</a>
         </div>
       </div>
     </section>

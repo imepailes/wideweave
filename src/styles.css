@@ -1417,6 +1417,9 @@ section.page-lead h1 { font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -0.0
 .profile__battery-num sup { font-size: 14px; color: var(--ink-3); margin-left: 2px; }
 .profile__battery-label { color: var(--ink-2); font-size: 13px; }
 .profile__battery-cta { align-self: flex-start; }
+.profile__drill { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 12px 0; }
+.profile__drill-num { font-size: 36px; font-weight: 700; color: var(--ink-1); font-family: var(--font-mono); line-height: 1; }
+.profile__drill-label { color: var(--ink-2); font-size: 13px; }
 @media (max-width: 720px) {
   .profile__grid { grid-template-columns: 1fr; gap: 20px; }
   .profile__row { grid-template-columns: 1fr; gap: 4px; }
@@ -1581,6 +1584,49 @@ section.page-lead h1 { font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -0.0
   .demo-stroop__legend-row { flex-direction: column; align-items: flex-start; gap: 4px; }
   .demo-stroop__legend { gap: 4px; }
   .demo-stroop__key { padding: 4px 8px; font-size: 11px; }
+}
+
+/* — Drill (spaced-recall queue) — */
+.drill-queue { display: flex; flex-direction: column; gap: 12px; padding: 16px 0; }
+.drill-queue__empty { font-size: 14px; line-height: 1.6; color: var(--ink-2); padding: 24px 20px; background: var(--surface-1); border: 1px dashed var(--border-default); border-radius: 8px; }
+.drill-queue__empty p { margin: 0 0 8px 0; }
+.drill-queue__empty p:last-child { margin-bottom: 0; }
+.drill-queue__empty code { font-family: var(--font-mono); font-size: 12px; padding: 1px 5px; background: var(--surface-2); border-radius: 3px; }
+.drill-queue__row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.drill-queue__module { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 18px 20px; background: var(--surface-1); border: 1px solid var(--border-default); border-radius: 8px; }
+.drill-queue__name { font-size: 16px; font-weight: 500; color: var(--ink-1); }
+.drill-queue__count { font-size: 13px; color: var(--ink-3); padding: 4px 10px; background: var(--surface-tint); border-radius: 999px; }
+.drill-queue__module button:disabled { opacity: 0.4; cursor: not-allowed; }
+.drill-stage { margin-top: 8px; }
+.drill { display: flex; flex-direction: column; gap: 18px; padding: 24px; background: var(--surface-1); border: 1px solid var(--border-default); border-radius: 10px; }
+.drill__head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--ink-2); padding-bottom: 14px; border-bottom: 1px solid var(--border-soft); }
+.drill__prompt { padding: 12px 0; text-align: center; }
+.drill__triplet { font-size: clamp(28px, 4vw, 44px); font-weight: 600; letter-spacing: -0.01em; color: var(--ink-1); }
+.drill__triplet .drill__word { display: inline-block; }
+.drill__pair { font-size: clamp(24px, 3.5vw, 36px); font-weight: 500; color: var(--ink-1); margin: 0 0 8px 0; }
+.drill__pair strong { font-weight: 700; }
+.drill__hint { font-size: 13px; color: var(--ink-3); margin: 8px 0 0 0; }
+.drill__hint code { font-family: var(--font-mono); font-size: 12px; padding: 1px 5px; background: var(--surface-2); border-radius: 3px; color: var(--ink-2); }
+.drill__input-row { display: flex; gap: 10px; align-items: stretch; }
+.drill__input { flex: 1; font: inherit; font-size: 18px; padding: 12px 14px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--surface-base); color: var(--ink-1); font-family: var(--font-mono); }
+.drill__input:focus { border-color: var(--ink-2); outline: none; }
+.drill__feedback { font-size: 14px; line-height: 1.55; padding: 0 4px; min-height: 24px; }
+.drill__feedback p { margin: 0; }
+.drill__ok { color: var(--ink-1); }
+.drill__ok strong { color: #2d7a3e; }
+.drill__miss { color: var(--ink-2); }
+.drill__miss code { font-family: var(--font-mono); font-size: 13px; padding: 2px 6px; background: var(--surface-2); border-radius: 3px; }
+.drill__next { display: inline-block; margin-left: 8px; font-size: 12px; color: var(--ink-3); }
+.drill__next kbd { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 1px 5px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 3px; }
+.drill__summary { padding: 8px 4px; }
+.drill__summary p { font-size: 15px; line-height: 1.6; color: var(--ink-2); margin: 0 0 12px 0; }
+.drill__summary p:last-of-type { margin-bottom: 24px; }
+.drill__actions { display: flex; gap: 12px; padding-top: 8px; }
+@media (max-width: 720px) {
+  .drill-queue__row { grid-template-columns: 1fr; }
+  .drill-queue__module { grid-template-columns: 1fr; gap: 8px; }
+  .drill__input-row { flex-direction: column; }
+  .drill__input-row .btn { width: 100%; }
 }
 
 /* — RAT demo (rewritten) — */

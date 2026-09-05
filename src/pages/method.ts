@@ -81,9 +81,9 @@ export const methodPage: PageModule = {
           </div>
           <h2 class="t-h2">Retrieval strength compounds. Decay doesn't get a vote.</h2>
           <p class="t-lead">
-            The schedule is built on Ebisu's open-source spaced-repetition
-            algorithm, with a per-skill decay model. The point is not to
-            see the same items more often — it is to never let the
+            The schedule is built on a per-item half-life, with a boost
+            on correct recall and a halve on a miss. The point is not
+            to see the same items more often — it is to never let the
             retrievable set shrink. A skill you used to be able to use
             and can no longer use is, by definition, decay.
           </p>
@@ -93,19 +93,25 @@ export const methodPage: PageModule = {
           <div class="method__panel-row">
             <span class="method__label">Schedule</span>
             <div>
-              <strong>Ebisu v2</strong> — Bayesian per-item decay. Initial guess 21 days; revised after each recall.
+              <strong>Half-life boost/halve</strong> — a simplified Anki-style model. Each item has a half-life in days (default 4 for new items). An item is "due" when its half-life has elapsed since the last recall.
             </div>
           </div>
           <div class="method__panel-row">
             <span class="method__label">Recall target</span>
             <div>
-              <strong>~85% predicted probability of recall</strong> on the next scheduled session. We bias toward retention.
+              <strong>Items return at the half-life.</strong> This is not full Ebisu and it doesn't claim to track Bayesian posterior over recall probability. A real Ebisu integration would compute the (α, β) posterior from each review and pick the next due time so the predicted probability of recall sits around 85%. The current engine picks the half-life directly — simpler, but it tracks the right variable: how long until you forget.
             </div>
           </div>
           <div class="method__panel-row">
             <span class="method__label">Failure handling</span>
             <div>
-              A miss halves the predicted half-life and re-schedules within 24 hours. There is no "I forgot" badge or streak breakage.
+              A correct recall multiplies the half-life by 1.7 (the item comes back later). A missed recall halves it (the item comes back sooner). There is no "I forgot" badge, no streak break, no penalty — just a tighter schedule.
+            </div>
+          </div>
+          <div class="method__panel-row">
+            <span class="method__label">Scope</span>
+            <div>
+              Spaced recall is built for the two modules that have items to recall: <a href="/modules/remote-associates">Remote Associates</a> (puzzle → answer) and <a href="/modules/concept-jump">Concept Jump</a> (start → optimal path). DAT, Dual n-back, and Stroop are training tasks with no per-item recall surface — they track session-level scores, not per-item half-lives. The queue lives at <a href="/drill">/drill</a>.
             </div>
           </div>
           <div class="method__panel-row">

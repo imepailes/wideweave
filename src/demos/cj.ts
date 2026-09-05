@@ -2,6 +2,8 @@
 // Path scored against BFS shortest path from current to target.
 
 import { saveSession } from '../lib/history';
+import { getOrCreateItem, loadDueItems, type DueItem } from '../lib/spacedRecall';
+import { CJ_PAIRS, type CjPair } from '../lib/recallItems';
 
 type CJNode = { id: string; n: string[] };
 
@@ -275,33 +277,7 @@ const G: Record<string, CJNode> = (() => {
   return out;
 })();
 
-function bfsShortestPath(start: string, end: string): string[] | null {
-  if (start === end) return [start];
-  if (!G[start] || !G[end]) return null;
-  const visited = new Set<string>([start]);
-  const queue: Array<{ node: string; path: string[] }> = [{ node: start, path: [start] }];
-  while (queue.length) {
-    const { node, path } = queue.shift()!;
-    const ns = G[node]?.n || [];
-    for (const nx of ns) {
-      if (visited.has(nx)) continue;
-      const nextPath = [...path, nx];
-      if (nx === end) return nextPath;
-      visited.add(nx);
-      queue.push({ node: nx, path: nextPath });
-    }
-  }
-  return null;
-}
-
-const PAIRS: [string, string][] = [
-  ['dreaming', 'ocean'],
-  ['memory', 'science'],
-  ['brain', 'gold'],
-  ['sleep', 'beach'],
-  ['plasticity', 'music'],
-  ['tree', 'electric']
-];
+const PAIRS_FALLBACK: { start: string; target: string; optimal: string[] }[] = CJ_PAIRS.slice(0, 6).map(p => ({ start: p.start, target: p.target, optimal: p.optimal }));
 
 let cjCleanup: (() => void) | null = null;
 
@@ -310,6 +286,28 @@ export function disposeCJ(): void {
     try { cjCleanup(); } catch { /* noop */ }
     cjCleanup = null;
   }
+}
+
+type PickedPair = { id: string; start: string; target: string; optimal: string[]; _correct: boolean | null };
+
+async function pickSessionPairs(n: number): Promise<PickedPair[]> {
+  let due: DueItem[] = [];
+  try { due = await loadDueItems('cj', 50); } catch { /* noop */ }
+  const dueByKey = new Map(due.map(d => [d.item_key, d.item_id]));
+  const seenKeys = new Set<string>(dueByKey.keys());
+  const duePairs: PickedPair[] = due
+    .map(d => CJ_PAIRS.find(p => p.id === d.item_key))
+    .filter((p): p is CjPair => !!p)
+    .slice(0, n)
+    .map(p => ({ id: p.id, start: p.start, target: p.target, optimal: p.optimal, _correct: null }));
+  if (duePairs.length >= n) return duePairs;
+  const rest = CJ_PAIRS.filter(p => !seenKeys.has(p.id));
+  for (let i = rest.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rest[i], rest[j]] = [rest[j], rest[i]];
+  }
+  const fillers: PickedPair[] = rest.slice(0, n - duePairs.length).map(p => ({ id: p.id, start: p.start, target: p.target, optimal: p.optimal, _correct: null }));
+  return [...duePairs, ...fillers].sort(() => Math.random() - 0.5);
 }
 
 export function initCJ(): void {
@@ -335,8 +333,9 @@ export function initCJ(): void {
   let optimal: string[] | null = null;
   let advanceTimer: number | null = null;
   const startedAt = Date.now();
-  const pairs: { start: string; target: string; userLen: number; optimalLen: number; reached: boolean }[] = [];
+  const pairs: { start: string; target: string; userLen: number; optimalLen: number; reached: boolean; _correct: boolean | null; _picked: PickedPair }[] = [];
   let saveInflight = false;
+  let pickedPairs: PickedPair[] = [];
 
   const renderChips = () => {
     const adj = (G[current]?.n || []).slice(0, 10);
@@ -368,10 +367,12 @@ export function initCJ(): void {
       effText.textContent = `${(effVal * 100).toFixed(0)}%`;
       effEl.textContent = `${(effVal * 100).toFixed(0)}%`;
       chipsEl.innerHTML = `<span class="demo-cj__win">Reached ${target} in ${userLen} step${userLen === 1 ? '' : 's'} (optimal: ${optimalLen}).</span>`;
-      pairs.push({ start: PAIRS[pairIdx % PAIRS.length][0], target, userLen, optimalLen, reached: true });
+      const picked = pickedPairs[pairIdx];
+      const reached = userLen <= optimalLen;
+      pairs.push({ start: picked?.start ?? current, target, userLen, optimalLen, reached: true, _correct: reached, _picked: picked ?? null });
       if (advanceTimer) clearTimeout(advanceTimer);
       advanceTimer = window.setTimeout(() => {
-        if (pairIdx + 1 >= PAIRS.length) {
+        if (pairIdx + 1 >= pickedPairs.length) {
           finalize();
         } else {
           nextPair();
@@ -385,30 +386,50 @@ export function initCJ(): void {
     }
   };
 
-  const finalize = () => {
+  const finalize = async () => {
     if (saveInflight) return;
     if (pairs.length === 0) return; // nothing to save
     saveInflight = true;
     const elapsed = Math.round((Date.now() - startedAt) / 1000);
     const meanEff = pairs.reduce((s, p) => s + (p.optimalLen > 0 ? Math.max(0, Math.min(1, p.optimalLen / Math.max(p.userLen, 1))) : 0), 0) / pairs.length;
-    void saveSession({
-      module: 'cj',
-      score: meanEff,
-      time_s: elapsed,
-      trials: pairs.length,
-      detail: { pairs: pairs.slice() }
-    }).finally(() => { saveInflight = false; });
+    try {
+      await saveSession({
+        module: 'cj',
+        score: meanEff,
+        time_s: elapsed,
+        trials: pairs.length,
+        detail: { pairs: pairs.map(p => ({ start: p.start, target: p.target, userLen: p.userLen, optimalLen: p.optimalLen, reached: p.reached })) }
+      });
+      // After save, upsert items and record per-pair reviews.
+      for (const p of pairs) {
+        const picked = p._picked;
+        if (!picked) continue;
+        const correct = !!p._correct;
+        const created = await getOrCreateItem('cj', picked.id, `${picked.start} → ${picked.target}`, {
+          start: picked.start,
+          target: picked.target,
+          optimal: picked.optimal
+        });
+        if (created.ok && created.item) {
+          const { recordReview } = await import('../lib/spacedRecall');
+          await recordReview(created.item.id, correct);
+        }
+      }
+    } finally {
+      saveInflight = false;
+    }
   };
 
   const nextPair = () => {
     if (advanceTimer) clearTimeout(advanceTimer);
-    pairIdx = (pairIdx + 1) % PAIRS.length;
-    const [s, t] = PAIRS[pairIdx];
-    current = s;
-    target = t;
+    pairIdx = (pairIdx + 1);
+    const p = pickedPairs[pairIdx];
+    if (!p) return finalize();
+    current = p.start;
+    target = p.target;
     trail.length = 0;
     trail.push(current);
-    optimal = bfsShortestPath(current, target);
+    optimal = p.optimal.slice();
     render();
   };
 
@@ -462,14 +483,18 @@ export function initCJ(): void {
   chipsEl.addEventListener('click', onChipsClick);
   pathEl.addEventListener('click', onPathClick);
 
-  // Initial pair
-  const [s, t] = PAIRS[0];
-  current = s;
-  target = t;
-  trail.length = 0;
-  trail.push(current);
-  optimal = bfsShortestPath(current, target);
-  render();
+  // Initial pair (loaded async)
+  void (async () => {
+    pickedPairs = await pickSessionPairs(6);
+    if (pickedPairs.length === 0) pickedPairs = PAIRS_FALLBACK.map(p => ({ id: 'fallback', start: p.start, target: p.target, optimal: p.optimal, _correct: null }));
+    const p = pickedPairs[0];
+    current = p.start;
+    target = p.target;
+    trail.length = 0;
+    trail.push(current);
+    optimal = p.optimal.slice();
+    render();
+  })();
 
   cjCleanup = () => {
     input.removeEventListener('keydown', onKey);

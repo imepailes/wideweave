@@ -13,6 +13,7 @@ const routes: Record<string, () => Promise<PageModule>> = {
   '/modules/concept-jump': () => import('./pages/cj').then((m) => m.cjPage),
   '/modules/dual-n-back': () => import('./pages/nb').then((m) => m.nbPage),
   '/modules/stroop': () => import('./pages/stroop').then((m) => m.stroopPage),
+  '/drill': () => import('./pages/drill').then((m) => m.drillPage),
   '/method': () => import('./pages/method').then((m) => m.methodPage),
   '/transfer': () => import('./pages/transfer').then((m) => m.transferPage),
   '/principles': () => import('./pages/principles').then((m) => m.principlesPage),
