@@ -5,13 +5,14 @@
 import { supabase, SUPABASE_CONFIGURED } from './supabase';
 import { getAuthState } from './auth';
 
-export type Module = 'dat' | 'rat' | 'cj' | 'nb';
+export type Module = 'dat' | 'rat' | 'cj' | 'nb' | 'stroop';
 
 export type SessionPayload =
   | { module: 'dat'; score: number; time_s: number; detail: { words: string[] } }
   | { module: 'rat'; score: number; time_s: number; trials: number; detail: { solved: number; revealed: number; skipped: number; words: string[]; guesses: string[] } }
   | { module: 'cj'; score: number; time_s: number; trials: number; detail: { pairs: { start: string; target: string; userLen: number; optimalLen: number; reached: boolean }[] } }
-  | { module: 'nb'; score: number; score_secondary: number; time_s: number; trials: number; detail: { finalN: number; posAcc: number; audAcc: number; trialAcc: number } };
+  | { module: 'nb'; score: number; score_secondary: number; time_s: number; trials: number; detail: { finalN: number; posAcc: number; audAcc: number; trialAcc: number } }
+  | { module: 'stroop'; score: number; score_secondary: number; time_s: number; trials: number; detail: { per_trial: { word: string; color: string; congruent: boolean; correct: boolean; rt: number }[]; mean_congruent_ms: number; mean_incongruent_ms: number; stroop_effect_ms: number; incongruent_acc: number; congruent_acc: number; difficulty: number } };
 
 export type SessionRow = {
   id: number;
@@ -108,16 +109,16 @@ export async function loadMyLatestPerModule(): Promise<Partial<Record<Module, Se
 }
 
 export async function loadCohortStats(): Promise<{ weavers: number; sessions_total: number; byModule: Record<Module, CohortStat> }> {
-  if (!SUPABASE_CONFIGURED) return { weavers: 0, sessions_total: 0, byModule: { dat: emptyStat('dat'), rat: emptyStat('rat'), cj: emptyStat('cj'), nb: emptyStat('nb') } };
+  if (!SUPABASE_CONFIGURED) return { weavers: 0, sessions_total: 0, byModule: { dat: emptyStat('dat'), rat: emptyStat('rat'), cj: emptyStat('cj'), nb: emptyStat('nb'), stroop: emptyStat('stroop') } };
   const { data, error } = await supabase
     .from('cohort_stats')
     .select('module, weavers, sessions_total, median_score');
   if (error) {
     // eslint-disable-next-line no-console
     console.warn('[cohort] load failed', error);
-    return { weavers: 0, sessions_total: 0, byModule: { dat: emptyStat('dat'), rat: emptyStat('rat'), cj: emptyStat('cj'), nb: emptyStat('nb') } };
+    return { weavers: 0, sessions_total: 0, byModule: { dat: emptyStat('dat'), rat: emptyStat('rat'), cj: emptyStat('cj'), nb: emptyStat('nb'), stroop: emptyStat('stroop') } };
   }
-  const byModule: Record<Module, CohortStat> = { dat: emptyStat('dat'), rat: emptyStat('rat'), cj: emptyStat('cj'), nb: emptyStat('nb') };
+  const byModule: Record<Module, CohortStat> = { dat: emptyStat('dat'), rat: emptyStat('rat'), cj: emptyStat('cj'), nb: emptyStat('nb'), stroop: emptyStat('stroop') };
   let totalWeavers = 0;
   let totalSessions = 0;
   for (const row of (data ?? []) as CohortStat[]) {

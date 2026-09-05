@@ -1545,6 +1545,44 @@ section.page-lead h1 { font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -0.0
 .demo-dat__input:focus { border-color: var(--ink-2); outline: none; }
 .demo-dat__legend { font-size: 12px; color: var(--ink-3); padding-top: 4px; border-top: 1px solid var(--border-soft); }
 
+/* — Stroop demo (M·05) — */
+.demo-stroop { display: flex; flex-direction: column; gap: 16px; height: 100%; }
+.demo-stroop__row { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }
+.demo-stroop__counter { display: flex; align-items: baseline; gap: 6px; }
+.demo-stroop__num { font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1; color: var(--ink-1); }
+.demo-stroop__of { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.demo-stroop__live { display: flex; flex-direction: column; align-items: flex-end; }
+.demo-stroop__label { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.demo-stroop__score { font-size: 22px; font-weight: 500; color: var(--ink-1); font-variant-numeric: tabular-nums; line-height: 1; margin-top: 2px; }
+.demo-stroop__stage { min-height: 180px; display: flex; align-items: center; justify-content: center; padding: 24px 0; }
+.demo-stroop__word { font-size: clamp(48px, 7vw, 96px); font-weight: 700; letter-spacing: -0.02em; text-align: center; line-height: 1; transition: transform 80ms ease; min-height: 1.2em; }
+.demo-stroop__word[data-feedback="correct"] { transform: scale(1.03); }
+.demo-stroop__word[data-feedback="wrong"] { transform: translateX(-4px); }
+.demo-stroop__legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.demo-stroop__key { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--surface-1); font-size: 12px; }
+.demo-stroop__key kbd { font-family: var(--font-mono); font-size: 13px; font-weight: 600; font-style: normal; background: transparent; border: 0; padding: 0; }
+.demo-stroop__chart-wrap { height: 60px; background: var(--surface-tint); border: 1px solid var(--border-soft); border-radius: 8px; padding: 4px; overflow: hidden; }
+.demo-stroop__chart { width: 100%; height: 100%; display: block; }
+.demo-stroop__legend-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-3); }
+.demo-stroop__legend-row kbd { display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 600; padding: 1px 5px; background: var(--surface-2); border: 1px solid var(--border-default); border-radius: 4px; margin: 0 1px; }
+.demo-stroop__esc { color: var(--ink-3); }
+.demo-stroop__summary { display: flex; flex-direction: column; gap: 18px; padding: 8px 0; }
+.demo-stroop__summary-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); font-size: 13px; color: var(--ink-2); }
+.demo-stroop__summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 4px 0; }
+.demo-stroop__stat { display: flex; flex-direction: column; gap: 4px; }
+.demo-stroop__stat-num { font-size: 28px; font-weight: 500; color: var(--ink-1); font-variant-numeric: tabular-nums; line-height: 1; }
+.demo-stroop__stat-unit { font-size: 14px; color: var(--ink-3); font-weight: 400; margin-left: 2px; }
+.demo-stroop__stat-label { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.demo-stroop__summary-note { font-size: 14px; line-height: 1.55; color: var(--ink-2); padding: 14px 16px; background: var(--surface-1); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; }
+.demo-stroop__summary-note p { margin: 0; }
+.demo-stroop__summary-actions { display: flex; gap: 12px; }
+@media (max-width: 720px) {
+  .demo-stroop__summary-grid { grid-template-columns: 1fr 1fr; }
+  .demo-stroop__legend-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .demo-stroop__legend { gap: 4px; }
+  .demo-stroop__key { padding: 4px 8px; font-size: 11px; }
+}
+
 /* — RAT demo (rewritten) — */
 .demo-rat { display: flex; flex-direction: column; gap: 14px; height: 100%; }
 .demo-rat__progress { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }

@@ -47,7 +47,7 @@ function renderInAppBlock(summary: InAppSummary): string {
         </div>
       </section>`;
   }
-  const modules: ('dat' | 'rat' | 'cj' | 'nb')[] = ['dat', 'rat', 'cj', 'nb'];
+  const modules: ('dat' | 'rat' | 'cj' | 'nb' | 'stroop')[] = ['dat', 'rat', 'cj', 'nb', 'stroop'];
   const rows = modules.map(m => {
     const latest = summary.latest[m];
     const count = summary.counts[m] ?? 0;

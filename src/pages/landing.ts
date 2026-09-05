@@ -11,7 +11,7 @@ import { loadBatteryHistory } from '../lib/batteryHistory';
 
 function renderYourProfile(inApp: InAppSummary, battery: { rows: number; latest: number | null; latestAt: string | null }): string {
   const totalRuns = Object.values(inApp.counts).reduce((a, b) => a + b, 0);
-  const modules: ('dat' | 'rat' | 'cj' | 'nb')[] = ['dat', 'rat', 'cj', 'nb'];
+  const modules: ('dat' | 'rat' | 'cj' | 'nb' | 'stroop')[] = ['dat', 'rat', 'cj', 'nb', 'stroop'];
   const rows = modules.map(m => {
     const latest = inApp.latest[m];
     const count = inApp.counts[m] ?? 0;
@@ -194,6 +194,24 @@ export const landingPage: PageModule = {
             </p>
             <div class="module-index__meta">
               <span><strong>Jaeggi et al. 2008</strong> · mixed replication record</span>
+            </div>
+            <span class="module-index__cta">Open the module<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></span>
+          </a>
+
+          <a class="module-index__card" href="/modules/stroop" data-module="stroop">
+            <div class="module-index__head">
+              <span class="module-index__num">M·05</span>
+              <span class="pill pill--proved"><span class="dot"></span>Evidence-backed</span>
+            </div>
+            <h3 class="module-index__title">Stroop</h3>
+            <p class="module-index__desc">
+              The color, not the word. 60 trials per session, scored
+              against the published mean from MacLeod (1991). The
+              interference effect is one of the most replicated in
+              experimental psychology.
+            </p>
+            <div class="module-index__meta">
+              <span><strong>MacLeod 1991</strong> · inhibitory control, d ≈ 0.50 trained, d ≈ 0.20 transfer</span>
             </div>
             <span class="module-index__cta">Open the module<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></span>
           </a>

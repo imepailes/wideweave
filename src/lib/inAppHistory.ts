@@ -21,7 +21,7 @@ export type InAppSummary = {
 let cache: InAppSummary | null = null;
 let inflight: Promise<InAppSummary> | null = null;
 
-const EMPTY_COUNTS: Record<Module, number> = { dat: 0, rat: 0, cj: 0, nb: 0 };
+const EMPTY_COUNTS: Record<Module, number> = { dat: 0, rat: 0, cj: 0, nb: 0, stroop: 0 };
 
 export async function loadInAppSummary(force = false): Promise<InAppSummary> {
   if (!SUPABASE_CONFIGURED) return { latest: {}, counts: { ...EMPTY_COUNTS }, loadedAt: Date.now() };
@@ -65,6 +65,7 @@ export function formatInAppScore(module: Module, score: number): string {
     case 'rat': return `${(score * 6).toFixed(1)} / 6 solved`;
     case 'cj': return `${(score * 100).toFixed(0)}% efficient`;
     case 'nb': return `n-back ${score.toFixed(0)}${score >= 7 ? ' (capped)' : ''}`;
+    case 'stroop': return `${Math.round(score)}ms incongruent RT`;
   }
 }
 
@@ -74,5 +75,6 @@ export function inAppModuleLabel(module: Module): string {
     case 'rat': return 'Remote Associates';
     case 'cj': return 'Concept Jump';
     case 'nb': return 'Dual n-back';
+    case 'stroop': return 'Stroop';
   }
 }

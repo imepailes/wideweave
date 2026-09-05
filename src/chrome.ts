@@ -77,6 +77,7 @@ export function renderFooter(currentRoute: Route): string {
               <li><a href="/modules/remote-associates">Remote associates</a></li>
               <li><a href="/modules/concept-jump">Concept jump</a></li>
               <li><a href="/modules/dual-n-back">Dual n-back</a></li>
+              <li><a href="/modules/stroop">Stroop</a></li>
             </ul>
           </div>
           <div>

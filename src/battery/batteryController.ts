@@ -26,7 +26,7 @@ export type BatteryControllerHandle = {
 };
 
 function renderInAppBlock(inApp: InAppSummary): string {
-  const modules: ('dat' | 'rat' | 'cj' | 'nb')[] = ['dat', 'rat', 'cj', 'nb'];
+  const modules: ('dat' | 'rat' | 'cj' | 'nb' | 'stroop')[] = ['dat', 'rat', 'cj', 'nb', 'stroop'];
   const rows = modules.map(m => {
     const latest = inApp.latest[m];
     const count = inApp.counts[m] ?? 0;

@@ -23,7 +23,8 @@ const EMPTY: CohortSnapshot = {
     dat: { module: 'dat', weavers: 0, sessions_total: 0, median_score: 0 },
     rat: { module: 'rat', weavers: 0, sessions_total: 0, median_score: 0 },
     cj: { module: 'cj', weavers: 0, sessions_total: 0, median_score: 0 },
-    nb: { module: 'nb', weavers: 0, sessions_total: 0, median_score: 0 }
+    nb: { module: 'nb', weavers: 0, sessions_total: 0, median_score: 0 },
+    stroop: { module: 'stroop', weavers: 0, sessions_total: 0, median_score: 0 }
   },
   fetchedAt: 0
 };

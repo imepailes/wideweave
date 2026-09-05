@@ -11,7 +11,8 @@ const SCORE_FORMAT: Record<Module, (r: SessionRow) => string> = {
   dat: (r) => `mean distance ${r.score.toFixed(3)}`,
   rat: (r) => `${r.detail.solved as number ?? 0}/6 solved`,
   cj: (r) => `${(r.score * 100).toFixed(0)}% efficient`,
-  nb: (r) => `n-back reached ${r.score.toFixed(0)}${r.score_secondary != null ? ` · ${(r.score_secondary * 100).toFixed(0)}% acc` : ''}`
+  nb: (r) => `n-back reached ${r.score.toFixed(0)}${r.score_secondary != null ? ` · ${(r.score_secondary * 100).toFixed(0)}% acc` : ''}`,
+  stroop: (r) => `${Math.round(r.score)}ms incongruent${r.score_secondary != null ? ` · ${(r.score_secondary * 100).toFixed(0)}% acc` : ''}`
 };
 
 function timeAgo(iso: string): string {
@@ -33,12 +34,18 @@ function renderSparkline(rows: SessionRow[], module: Module): string {
   const min = Math.min(...ordered.map(r => r.score));
   const max = Math.max(...ordered.map(r => r.score));
   const range = max - min || 1;
+  // For "higher is better" modules, top of chart = max. For "lower is better"
+  // (NB, STROOP), top of chart = min — so the line goes UP when you improve.
+  const invertY = module === 'nb' || module === 'stroop';
+  const yMap = invertY
+    ? (s: number) => pad + ((s - min) / range) * (H - pad * 2)
+    : (s: number) => pad + (1 - (s - min) / range) * (H - pad * 2);
   const stepX = (W - pad * 2) / Math.max(ordered.length - 1, 1);
-  const points = ordered.map((r, i) => `${pad + i * stepX},${pad + (1 - (r.score - min) / range) * (H - pad * 2)}`);
+  const points = ordered.map((r, i) => `${pad + i * stepX},${yMap(r.score)}`);
   const line = `<polyline points="${points.join(' ')}" fill="none" stroke="#1B1B1B" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round"/>`;
   const last = ordered[ordered.length - 1];
   const lastX = pad + (ordered.length - 1) * stepX;
-  const lastY = pad + (1 - (last.score - min) / range) * (H - pad * 2);
+  const lastY = yMap(last.score);
   const dot = `<circle cx="${lastX}" cy="${lastY}" r="2.5" fill="#1B1B1B"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Your last ${ordered.length} ${module} sessions">${line}${dot}</svg>`;
 }
