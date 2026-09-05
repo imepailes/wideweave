@@ -1393,6 +1393,35 @@ section.page-lead h1 { font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -0.0
 .teaser__chart-row .bar > i { display: block; height: 100%; background: var(--ink-1); border-radius: 999px; }
 .teaser__chart-row .num { font-variant-numeric: tabular-nums; font-weight: 500; text-align: right; color: var(--ink-1); }
 
+/* Your profile widget on the landing page */
+.profile { background: var(--surface-base); border-top: 1px solid var(--border-soft); }
+.profile__grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; }
+.profile__col { display: flex; flex-direction: column; gap: 12px; }
+.profile__rows { display: flex; flex-direction: column; gap: 0; }
+.profile__row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+}
+.profile__row:last-child { border-bottom: 0; }
+.profile__row--none { color: var(--ink-3); }
+.profile__name { font-weight: 500; color: var(--ink-1); }
+.profile__latest { color: var(--ink-2); font-family: var(--font-mono); font-size: 13px; }
+.profile__count { color: var(--ink-3); font-family: var(--font-mono); font-size: 12px; }
+.profile__battery { display: flex; align-items: baseline; gap: 8px; padding: 16px 0; }
+.profile__battery-num { font-size: 36px; font-weight: 700; color: var(--ink-1); font-family: var(--font-mono); }
+.profile__battery-num sup { font-size: 14px; color: var(--ink-3); margin-left: 2px; }
+.profile__battery-label { color: var(--ink-2); font-size: 13px; }
+.profile__battery-cta { align-self: flex-start; }
+@media (max-width: 720px) {
+  .profile__grid { grid-template-columns: 1fr; gap: 20px; }
+  .profile__row { grid-template-columns: 1fr; gap: 4px; }
+}
+
 /* — Module detail (full-bleed module page) — */
 .module-detail__surface { padding-top: var(--s-20); padding-bottom: var(--s-12); }
 .module--detail { padding: var(--s-7); }
@@ -1913,10 +1942,310 @@ section.page-lead h1 { font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -0.0
 .battery-cites { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .battery-cites li { font-size: 12px; color: var(--ink-3); }
 
+/* Per-task header (progress bar + counter + exit button) */
+.battery-task-head {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.battery-task-head__progress {
+  position: relative;
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.battery-task-head__progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--w, 0%);
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 220ms cubic-bezier(.2, .7, .2, 1);
+}
+.battery-task-head__counter {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.battery-task-head__exit {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.battery-task-head__exit:hover { background: var(--surface-2); color: var(--ink-1); }
+.battery-task-head__exit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Stroop legend — colored key chips */
+.battery-stroop__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 8px;
+  justify-content: center;
+}
+.battery-stroop__key {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-1);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.battery-stroop__key kbd {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  font-style: normal;
+  /* Color is set inline via style="color: ..." */
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+/* Inspection-time key legend */
+.battery-it__legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+.battery-it__legend kbd {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
+/* Mental rotation — angle label */
+.battery-mr__angle {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 12px;
+  letter-spacing: 0.04em;
+}
+.battery-mr__prompt { margin-top: 8px; }
+.battery-mr__prompt kbd {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  margin: 0 2px;
+}
+
+/* Reading span — sentence + recall + set list */
+.battery-rs__sentence {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink-1);
+  padding: 14px 18px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  margin-bottom: 18px;
+}
+.battery-rs__letter {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 18px;
+  min-height: 44px;
+}
+.battery-rs__judge-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 18px; }
+.battery-rs__judge kbd {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  margin-right: 6px;
+}
+.battery-rs__progress { font-size: 12px; color: var(--ink-3); margin-bottom: 10px; letter-spacing: 0.04em; }
+.battery-rs__letters { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; min-height: 32px; }
+.battery-rs__held {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: white;
+  border-radius: 6px;
+}
+.battery-rs__recall { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.battery-rs__setlist { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.battery-rs__setlist li { font-size: 13px; color: var(--ink-2); padding-left: 20px; position: relative; }
+.battery-rs__setlist li::before { content: '✓'; color: var(--accent); position: absolute; left: 0; }
+.battery-rs__setlist--hidden { display: none; }
+
+/* Stroop word — make the keyboard mapping visible */
+.battery-stroop__word {
+  font-size: clamp(48px, 6vw, 88px);
+  font-weight: 700;
+  text-align: center;
+  margin: 8px 0 4px;
+  min-height: 1.2em;
+  letter-spacing: -0.02em;
+  transition: transform 100ms ease;
+}
+.battery-stroop__word[data-feedback="correct"] { transform: scale(1.04); }
+.battery-stroop__word[data-feedback="wrong"] { transform: translateX(-6px); }
+.battery-stroop__prompt { text-align: center; color: var(--ink-3); font-size: 13px; }
+
+/* IT — line + mask */
+.battery-it__stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 56px;
+  height: 200px;
+  margin: 8px 0;
+}
+.battery-it__line {
+  width: 28px;
+  background: var(--ink-1);
+  border-radius: 2px;
+  transition: opacity 50ms linear;
+}
+.battery-it__mask {
+  position: absolute;
+  font-size: 64px;
+  color: var(--ink-1);
+  letter-spacing: 0.2em;
+}
+
+/* MR — large SVG hands */
+.battery-mr__wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+  margin: 12px 0;
+}
+.battery-mr__hand {
+  color: var(--ink-1);
+}
+.battery-mr__arrow { color: var(--ink-3); font-size: 24px; }
+
+/* Results page — bar with mean + z markers */
+.battery-results__bar {
+  position: relative;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: visible;
+  margin: 6px 0 4px;
+}
+.battery-results__bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+  border-radius: 4px 0 0 4px;
+  opacity: 0.4;
+}
+.battery-results__bar-mean,
+.battery-results__bar-z {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+}
+.battery-results__bar-mean { background: var(--ink-3); }
+.battery-results__bar-z { background: var(--ink-1); }
+.battery-results__bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.battery-results__bar-label-mean { font-weight: 600; }
+
+/* In-app training block on results page */
+.battery-results__inapp { margin-top: 24px; padding: 20px 0; border-top: 1px solid var(--border-default); }
+.battery-inapp__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.battery-inapp__hint { font-size: 11px; color: var(--ink-3); }
+.battery-inapp__rows { display: flex; flex-direction: column; gap: 8px; }
+.battery-inapp__row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-default);
+}
+.battery-inapp__row:last-child { border-bottom: 0; }
+.battery-inapp__row--none { color: var(--ink-3); }
+.battery-inapp__name { font-size: 13px; color: var(--ink-1); font-weight: 500; }
+.battery-inapp__latest { font-size: 13px; color: var(--ink-2); font-family: var(--font-mono); }
+.battery-inapp__count { font-size: 12px; color: var(--ink-3); font-family: var(--font-mono); }
+
+/* Closing transfer note */
+.battery-results__note {
+  padding: 16px 18px;
+  background: var(--surface-1);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  margin-top: 8px;
+}
+.battery-results__note p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+
+/* Intro list */
+.battery-intro__list { padding-left: 20px; margin: 18px 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.battery-intro__list strong { color: var(--ink-1); font-weight: 600; }
+
+/* Results actions */
+.battery-results__actions { display: flex; gap: 12px; margin-top: 8px; }
+
 @media (max-width: 720px) {
   .battery-results__row-body { grid-template-columns: 1fr; gap: 16px; }
   .battery-results__score { text-align: left; display: flex; align-items: baseline; gap: 12px; }
   .battery-history__row { grid-template-columns: 1fr; gap: 8px; }
   .battery-history__count { text-align: left; }
+  .battery-inapp__row { grid-template-columns: 1fr; gap: 4px; }
+  .battery-task-head { grid-template-columns: 1fr auto; }
+  .battery-task-head__progress { grid-column: 1 / -1; }
+  .battery-stroop__legend { gap: 6px; }
+  .battery-stroop__key { padding: 6px 8px; font-size: 11px; }
+  .battery-mr__wrap { gap: 16px; }
   html { scroll-behavior: auto; }
 }

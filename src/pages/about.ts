@@ -1,4 +1,4 @@
-// /about — who built Wideweave and why.
+// /about — what Wideweave actually is.
 
 import type { PageModule } from './types';
 import { pageIntro } from '../motion';
@@ -13,12 +13,13 @@ export const aboutPage: PageModule = {
           <span aria-hidden="true">·</span>
           <span>About the lab</span>
         </div>
-        <h1 class="t-h1">A small lab of researchers, builders, and editors.</h1>
+        <h1 class="t-h1">An open lab. Built on published science. Honest about its limits.</h1>
         <p class="t-lead">
-          Wideweave is an independent research product. The team is
-          eleven. The lab is funded by membership, not by ads, not by
-          data sales, and not by a parent company with a brain-training
-          vertical to defend.
+          Wideweave is a research product. The lab publishes what it
+          measures and how. Where the science is strong, the page says
+          so. Where the science is mixed, the page says so. Where the
+          platform doesn't know, the platform says so. There is no
+          marketing layer that softens the truth.
         </p>
       </div>
     </section>
@@ -31,13 +32,13 @@ export const aboutPage: PageModule = {
             <span class="ix">01</span>
             <span>Why this exists</span>
           </div>
-          <h2 class="t-h2">AI is taking cognitive moves that the human brain evolved to do.</h2>
+          <h2 class="t-h2">AI is quietly taking cognitive moves the brain evolved to do.</h2>
         </div>
         <div class="about__lead">
           <p>
-            The category of cognitive task that LLM tools are most directly
-            displacing is the category that brain-training has been
-            studying for 60 years: associative retrieval, analogical
+            The category of cognitive task that LLM tools are most
+            directly displacing is the category that brain-training has
+            been studying for 60 years: associative retrieval, analogical
             search, divergent generation, and working-memory pressure.
             When you outsource a move often enough, the underlying
             ability decays — and the decay is invisible to you because
@@ -60,41 +61,30 @@ export const aboutPage: PageModule = {
           <div class="section-head__meta">
             <span class="rule"></span>
             <span class="ix">02</span>
-            <span>The team</span>
+            <span>What the lab is, and isn't</span>
           </div>
-          <h2 class="t-h2">Eleven people. Four on the science. Five on the build.</h2>
+          <h2 class="t-h2">An open lab, not a brain-training company.</h2>
         </div>
-
-        <div class="about__grid">
-          <div class="about__card">
-            <span class="about__ix">A</span>
-            <h3>Dr. R. Okafor</h3>
-            <p>Director · cognitive science, attention &amp; associative memory. Background: Edinburgh, MPI. Co-author of the lab's transfer protocol.</p>
+        <div class="method__rules">
+          <div class="method__rule">
+            <span class="method__rule-ix">a</span>
+            <h3>An open lab</h3>
+            <p>The platform is open-source. The four transfer-battery tasks use published baseline distributions from cited studies (MacLeod 1991, Deary 2010, Shepard &amp; Metzler 1971, Daneman &amp; Carpenter 1980). The "your profile" widget is on the home page for every signed-in user. The numbers are real.</p>
           </div>
-          <div class="about__card">
-            <span class="about__ix">B</span>
-            <h3>Dr. M. Carr</h3>
-            <p>Science lead · spaced-repetition &amp; retention. Background: ANU, Ebisu maintainer.</p>
+          <div class="method__rule">
+            <span class="method__rule-ix">b</span>
+            <h3>Not a brain-training company</h3>
+            <p>Wideweave does not sell subscriptions, runs no ads, has no investors. The platform is a research product first, an exercise tool second. It exists to keep the moves alive, not to maximise time-on-task. There is no "you've trained for 100 hours!" celebration screen.</p>
           </div>
-          <div class="about__card">
-            <span class="about__ix">C</span>
-            <h3>Dr. L. Park</h3>
-            <p>Statistical lead · item response theory, Bayesian decay, transfer-battery scoring.</p>
+          <div class="method__rule">
+            <span class="method__rule-ix">c</span>
+            <h3>Not a clinical tool</h3>
+            <p>The transfer battery is built on published mean and SD for each age band, but a 16-trial short battery is not a clinical assessment. If a result is concerning, the right next step is a clinical neuropsychologist, not a retake.</p>
           </div>
-          <div class="about__card">
-            <span class="about__ix">D</span>
-            <h3>J. Halverson</h3>
-            <p>Editor · the marketing site, the cohort reports, the open data. Background: London review desk.</p>
-          </div>
-          <div class="about__card">
-            <span class="about__ix">E</span>
-            <h3>A. Ito</h3>
-            <p>Build lead · TS, GSAP, Three.js. Background: design tooling, IDE plugins.</p>
-          </div>
-          <div class="about__card">
-            <span class="about__ix">F</span>
-            <h3>S. Bauer</h3>
-            <p>Data engineer · embedding models, the semantic-distance engine, the lab's private vector store.</p>
+          <div class="method__rule">
+            <span class="method__rule-ix">d</span>
+            <h3>Honest about the science</h3>
+            <p>The transfer literature on cognitive training is genuinely mixed. Melby-Lervåg &amp; Hulme (2013) and Simonsmeier et al. (2016) disagree about whether working-memory training transfers; Jaeggi et al. (2008) is a positive, the failure-to-replicate (Melby-Lervåg 2016) is a negative. The platform shows the disagreement on the principles page and on the transfer page rather than picking a side.</p>
           </div>
         </div>
       </div>
@@ -106,24 +96,20 @@ export const aboutPage: PageModule = {
           <div class="section-head__meta">
             <span class="rule"></span>
             <span class="ix">03</span>
-            <span>How the lab is funded</span>
+            <span>How the lab is run</span>
           </div>
-          <h2 class="t-h2">Membership, not data sales. Not ads. Not investors with a thesis.</h2>
+          <h2 class="t-h2">Small. Open. Self-funded by the build.</h2>
         </div>
         <div class="about__lead">
           <p>
-            The lab runs on a flat £9/month membership. Members get the
-            full product, the open-data archive, and the quarterly cohort
-            report. We do not sell data, do not run ads, do not have an
-            investor on the cap table. This is the only way we can be
-            honest about transfer — because there is no one on the
-            other side of the wall wanting us to be less honest.
-          </p>
-          <p>
-            We have turned down four acquisition offers because the
-            acquirers were in adjacent brain-training categories and
-            would have had a financial incentive to soften the
-            transfer messaging. We will keep turning them down.
+            Wideweave is built and run as an open lab. The source is
+            public, the migration scripts are in the repository, and
+            anyone can run the platform against their own Supabase
+            project by setting the two environment variables. There is
+            no paid tier, no premium module, and no data sharing. The
+            lab's only metric is the gap between in-app training and
+            transfer-battery scores — and the platform will say so when
+            the gap is large.
           </p>
         </div>
       </div>

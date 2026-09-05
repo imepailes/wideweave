@@ -15,6 +15,7 @@ export type TaskScore = {
 export type TaskHandle = {
   id: string;
   name: string;
+  totalTrials: number;
   // Mount the task UI into the host element. The returned function
   // is called when the task is done and should tear down listeners.
   mount: (host: HTMLElement, onComplete: (s: TaskScore) => void, onAbort?: () => void) => () => void;

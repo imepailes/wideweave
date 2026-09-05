@@ -92,7 +92,7 @@ export function renderFooter(currentRoute: Route): string {
             <h4>Open the lab</h4>
             <ul>
               <li><a href="/modules/divergent-association">Start a 12-min session</a></li>
-              <li><a href="/about">Cohort 14 · apply</a></li>
+              <li><a href="/about">About the open lab</a></li>
               <li><a href="/method">Research panel</a></li>
               <li><a href="/principles">Open data · FAQ</a></li>
             </ul>
@@ -100,7 +100,7 @@ export function renderFooter(currentRoute: Route): string {
         </div>
         <div class="footer__meta">
           <span>© Wideweave Lab · A research product, not a brain game.</span>
-          <span data-live="weavers">v0.5 · cohort 14</span>
+          <span data-live="weavers">v0.5 · open lab</span>
         </div>
       </div>
     </footer>

@@ -4,6 +4,60 @@ import type { PageModule } from './types';
 import { initHero, disposeHero } from '../hero';
 import { pageIntro } from '../motion';
 import { refreshCohort } from '../lib/cohort';
+import { getAuthState, onAuthChange } from '../lib/auth';
+import { SUPABASE_CONFIGURED } from '../lib/supabase';
+import { loadInAppSummary, inAppModuleLabel, formatInAppScore, type InAppSummary } from '../lib/inAppHistory';
+import { loadBatteryHistory } from '../lib/batteryHistory';
+
+function renderYourProfile(inApp: InAppSummary, battery: { rows: number; latest: number | null; latestAt: string | null }): string {
+  const totalRuns = Object.values(inApp.counts).reduce((a, b) => a + b, 0);
+  const modules: ('dat' | 'rat' | 'cj' | 'nb')[] = ['dat', 'rat', 'cj', 'nb'];
+  const rows = modules.map(m => {
+    const latest = inApp.latest[m];
+    const count = inApp.counts[m] ?? 0;
+    const name = inAppModuleLabel(m);
+    if (!latest) {
+      return `<div class="profile__row profile__row--none">
+        <span class="profile__name">${name}</span>
+        <span class="profile__latest">no sessions</span>
+        <span class="profile__count">—</span>
+      </div>`;
+    }
+    return `<div class="profile__row">
+      <span class="profile__name">${name}</span>
+      <span class="profile__latest">${formatInAppScore(m, latest.score)}</span>
+      <span class="profile__count">${count} run${count === 1 ? '' : 's'}</span>
+    </div>`;
+  }).join('');
+  const batLine = battery.rows === 0
+    ? `<span class="profile__battery-num">—</span><span class="profile__battery-label">no battery yet</span>`
+    : `<span class="profile__battery-num">${battery.latest}<sup>th</sup></span><span class="profile__battery-label">transfer percentile (last of ${battery.rows} run${battery.rows === 1 ? '' : 's'})</span>`;
+  return `
+    <section class="section profile" id="profile">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-head__meta">
+            <span class="rule"></span>
+            <span class="ix">00</span>
+            <span>Your profile</span>
+          </div>
+          <h2 class="t-h2">${totalRuns} session${totalRuns === 1 ? '' : 's'} on file. ${battery.rows === 0 ? 'No transfer battery yet.' : 'Transfer battery done ' + battery.rows + ' time' + (battery.rows === 1 ? '' : 's') + '.'}</h2>
+          <p class="t-body">A live view of your four training modules and your latest transfer battery score. This block updates as you train — the whole point of the platform is to make the in-app graphs and the transfer graph visible in the same place.</p>
+        </div>
+        <div class="profile__grid">
+          <div class="profile__col">
+            <span class="t-eyebrow">In-app modules</span>
+            <div class="profile__rows">${rows}</div>
+          </div>
+          <div class="profile__col">
+            <span class="t-eyebrow">Transfer battery</span>
+            <div class="profile__battery">${batLine}</div>
+            <a class="btn btn--ghost profile__battery-cta" href="/transfer">${battery.rows === 0 ? 'Take the transfer battery' : 'See full battery results'} →</a>
+          </div>
+        </div>
+      </div>
+    </section>`;
+}
 
 export const landingPage: PageModule = {
   html: /* html */ `
@@ -34,7 +88,7 @@ export const landingPage: PageModule = {
               <span><strong>0</strong> fake IQ scores</span>
               <span><strong>4</strong> independent skill graphs</span>
               <span><strong>1</strong> semantic-distance engine</span>
-              <span><strong>1</strong> quarterly transfer battery</span>
+              <span><strong>4</strong> transfer-battery tasks</span>
             </div>
           </div>
 
@@ -57,6 +111,8 @@ export const landingPage: PageModule = {
         </div>
       </div>
     </section>
+
+    <section data-landing-profile></section>
 
     <section class="section module-index" id="modules">
       <div class="container">
@@ -163,7 +219,7 @@ export const landingPage: PageModule = {
               <li>Generation before hints — always</li>
               <li>Spaced-repetition, not streak anxiety</li>
               <li>Adaptive difficulty on a rolling window</li>
-              <li>Quarterly novel-task transfer battery</li>
+              <li>On-demand novel-task transfer battery</li>
             </ul>
           </a>
           <a class="teaser" href="/transfer">
@@ -173,37 +229,18 @@ export const landingPage: PageModule = {
             </div>
             <h3 class="t-h3">If the in-app graphs go up but transfer doesn't, we say so.</h3>
             <p class="t-body">
-              Every 21 days, Wideweave runs five structurally unrelated
-              tasks you have never seen in the app. The result lives in the
-              same graph as your skill history — so the comparison is real.
+              Four structurally unrelated tasks you have never seen in the
+              app. Stroop, inspection time, mental rotation, reading span.
+              Each score is compared to the published mean for your age
+              band and shown next to the literature that says whether the
+              task is trainable.
             </p>
-            <div class="teaser__chart" aria-hidden="true">
-              <div class="teaser__chart-row">
-                <span>Verbal analogy</span>
-                <div class="bar"><i style="width: 72%"></i></div>
-                <span class="num">+8%</span>
-              </div>
-              <div class="teaser__chart-row">
-                <span>Numerical n-back</span>
-                <div class="bar"><i style="width: 84%"></i></div>
-                <span class="num">+12%</span>
-              </div>
-              <div class="teaser__chart-row">
-                <span>Sketch interp.</span>
-                <div class="bar"><i style="width: 52%"></i></div>
-                <span class="num">+4%</span>
-              </div>
-              <div class="teaser__chart-row">
-                <span>Constraint-find.</span>
-                <div class="bar"><i style="width: 36%"></i></div>
-                <span class="num">+1%</span>
-              </div>
-              <div class="teaser__chart-row">
-                <span>Research speedrun</span>
-                <div class="bar"><i style="width: 70%"></i></div>
-                <span class="num">+9%</span>
-              </div>
-            </div>
+            <ul class="teaser__list">
+              <li>Inhibitory control · MacLeod (1991)</li>
+              <li>Processing speed · Deary, Penke &amp; Johnson (2010)</li>
+              <li>Visual-spatial · Shepard &amp; Metzler (1971)</li>
+              <li>Working memory · Daneman &amp; Carpenter (1980)</li>
+            </ul>
           </a>
         </div>
       </div>
@@ -249,6 +286,30 @@ export const landingPage: PageModule = {
     } catch {
       fill('Cohort count unavailable');
     }
+
+    // Your-profile widget (only renders when signed in)
+    const profileHost = document.querySelector<HTMLElement>('[data-landing-profile]');
+    async function refreshProfile() {
+      if (!profileHost) return;
+      const auth = getAuthState();
+      if (auth.status !== 'signed-in' || !SUPABASE_CONFIGURED) {
+        profileHost.innerHTML = '';
+        return;
+      }
+      const [inApp, bat] = await Promise.all([loadInAppSummary(), loadBatteryHistory(1)]);
+      const latestRow = bat.rows[0];
+      const latest = latestRow ? (latestRow.percentiles as Record<string, number>) : null;
+      const meanPct = latest ? Math.round(Object.values(latest).reduce((a, b) => a + b, 0) / Object.values(latest).length) : null;
+      profileHost.innerHTML = renderYourProfile(inApp, {
+        rows: bat.rows.length,
+        latest: meanPct,
+        latestAt: latestRow?.created_at ?? null
+      });
+    }
+    await refreshProfile();
+    const offAuth = onAuthChange(() => { void refreshProfile(); });
+    cleanups.push(offAuth);
+
     return () => cleanups.forEach((c) => c());
   }
 };

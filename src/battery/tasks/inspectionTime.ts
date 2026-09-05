@@ -9,16 +9,29 @@ import type { TaskHandle, TaskScore } from '../taskRunner';
 export const inspectionTimeTask: TaskHandle = {
   id: 'inspection_time',
   name: 'Inspection time',
-  mount(host, onComplete) {
+  totalTrials: 16,
+  mount(host, onComplete, onAbort) {
     const trials = buildITTrials();
     let i = 0;
     let responses: { duration: number; correct: boolean }[] = [];
     let disposed = false;
     let nextTimer: number | null = null;
-    let keyHandler: ((e: KeyboardEvent) => void) | null = null;
     let stimTimer: number | null = null;
-    let maskTimer: number | null = null;
     const start = Date.now();
+
+    const header = document.createElement('div');
+    header.className = 'battery-task-head';
+    const progress = document.createElement('div');
+    progress.className = 'battery-task-head__progress';
+    const counter = document.createElement('div');
+    counter.className = 'battery-task-head__counter';
+    const exitBtn = document.createElement('button');
+    exitBtn.type = 'button';
+    exitBtn.className = 'battery-task-head__exit';
+    exitBtn.textContent = 'Exit battery';
+    header.appendChild(progress);
+    header.appendChild(counter);
+    header.appendChild(exitBtn);
 
     const stageEl = document.createElement('div');
     stageEl.className = 'battery-it__stage';
@@ -32,21 +45,32 @@ export const inspectionTimeTask: TaskHandle = {
     stageEl.appendChild(leftLine);
     stageEl.appendChild(rightLine);
     stageEl.appendChild(mask);
+
     const promptEl = document.createElement('div');
     promptEl.className = 'battery-it__prompt';
-    promptEl.textContent = 'Press F for LEFT longer · J for RIGHT longer';
+
+    const legend = document.createElement('div');
+    legend.className = 'battery-it__legend';
+    legend.setAttribute('aria-hidden', 'true');
+    legend.innerHTML = '<span><kbd>F</kbd> left was longer</span><span><kbd>J</kbd> right was longer</span>';
+
+    host.appendChild(header);
     host.appendChild(stageEl);
+    host.appendChild(legend);
     host.appendChild(promptEl);
+
+    function updateProgress() {
+      counter.textContent = `${i} / ${trials.length}`;
+      progress.style.setProperty('--w', `${(i / trials.length) * 100}%`);
+    }
 
     function showLines(t: { duration: number; leftLonger: boolean }) {
       mask.hidden = true;
       leftLine.hidden = false;
       rightLine.hidden = false;
-      // The longer line is 1.0em; the shorter is 0.7em
       leftLine.style.height = t.leftLonger ? '1em' : '0.7em';
       rightLine.style.height = t.leftLonger ? '0.7em' : '1em';
       if (stimTimer) clearTimeout(stimTimer);
-      if (maskTimer) clearTimeout(maskTimer);
       stimTimer = window.setTimeout(() => {
         leftLine.hidden = true;
         rightLine.hidden = true;
@@ -54,27 +78,31 @@ export const inspectionTimeTask: TaskHandle = {
       }, t.duration);
     }
 
+    function abort() {
+      if (disposed) return;
+      disposed = true;
+      if (onAbort) onAbort();
+    }
+
     function next() {
       if (disposed) return;
       if (i >= trials.length) {
-        const score = computeScore();
-        onComplete(score);
+        onComplete(computeScore());
         return;
       }
       mask.hidden = true;
       leftLine.hidden = true;
       rightLine.hidden = true;
-      // 700ms blank ISI
       if (nextTimer) clearTimeout(nextTimer);
       nextTimer = window.setTimeout(() => {
         if (disposed) return;
         showLines(trials[i]);
-      }, 700);
+        updateProgress();
+      }, 600);
     }
 
     function computeScore(): TaskScore {
       const elapsed = Math.round((Date.now() - start) / 1000);
-      // Group by duration, compute accuracy
       const byDur = new Map<number, { correct: number; total: number }>();
       for (const r of responses) {
         const e = byDur.get(r.duration) ?? { correct: 0, total: 0 };
@@ -101,30 +129,37 @@ export const inspectionTimeTask: TaskHandle = {
       };
     }
 
-    keyHandler = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       if (disposed) return;
+      const t = e.target as HTMLElement;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
       const k = e.key.toLowerCase();
+      if (k === 'escape') { e.preventDefault(); abort(); return; }
       if (k !== 'f' && k !== 'j') return;
       e.preventDefault();
-      const t = trials[i];
-      if (!t) return;
-      const expected = t.leftLonger ? 'f' : 'j';
+      const trial = trials[i];
+      if (!trial) return;
+      const expected = trial.leftLonger ? 'f' : 'j';
       const correct = expected === k;
-      responses.push({ duration: t.duration, correct });
+      responses.push({ duration: trial.duration, correct });
       i++;
       if (nextTimer) clearTimeout(nextTimer);
       nextTimer = window.setTimeout(next, 300);
     };
 
-    window.addEventListener('keydown', keyHandler);
+    const onExit = () => abort();
+
+    window.addEventListener('keydown', onKey);
+    exitBtn.addEventListener('click', onExit);
+    updateProgress();
     next();
 
     return () => {
       disposed = true;
-      if (keyHandler) window.removeEventListener('keydown', keyHandler);
+      window.removeEventListener('keydown', onKey);
+      exitBtn.removeEventListener('click', onExit);
       if (nextTimer) clearTimeout(nextTimer);
       if (stimTimer) clearTimeout(stimTimer);
-      if (maskTimer) clearTimeout(maskTimer);
       host.innerHTML = '';
     };
   }

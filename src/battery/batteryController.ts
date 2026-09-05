@@ -2,8 +2,10 @@
 // the intro screen, the task sequence, the inter-task rest, and
 // the results screen. Persists the run to Supabase on completion.
 
-import { BATTERY_TASKS, type TaskHandle, type TaskScore } from './tasks';
-import { BATTERY, zScore, percentileFromZ, type AgeBand } from '../lib/batteryDistributions';
+import { BATTERY_TASKS } from './tasks';
+import type { TaskHandle, TaskScore } from './taskRunner';
+import { BATTERY, zScore, percentileFromZ, type AgeBand, type TaskBaseline } from '../lib/batteryDistributions';
+import { loadInAppSummary, formatInAppScore, inAppModuleLabel, type InAppSummary } from '../lib/inAppHistory';
 
 export type BatteryRun = {
   ageBand: AgeBand | null;
@@ -23,48 +25,46 @@ export type BatteryControllerHandle = {
   mount: (host: HTMLElement, ageBand: AgeBand | null, onComplete: (run: BatteryRun) => void) => () => void;
 };
 
-function makeHeader(host: HTMLElement, title: string, subtitle: string, ix: number, total: number) {
-  const wrap = document.createElement('div');
-  wrap.className = 'battery-controller__head';
-  const eyebrow = document.createElement('div');
-  eyebrow.className = 'battery-controller__eyebrow';
-  eyebrow.textContent = `Task ${ix} of ${total}`;
-  const h2 = document.createElement('h2');
-  h2.className = 't-h2 battery-controller__title';
-  h2.textContent = title;
-  const sub = document.createElement('p');
-  sub.className = 'battery-controller__subtitle';
-  sub.textContent = subtitle;
-  wrap.appendChild(eyebrow);
-  wrap.appendChild(h2);
-  wrap.appendChild(sub);
-  host.appendChild(wrap);
+function renderInAppBlock(inApp: InAppSummary): string {
+  const modules: ('dat' | 'rat' | 'cj' | 'nb')[] = ['dat', 'rat', 'cj', 'nb'];
+  const rows = modules.map(m => {
+    const latest = inApp.latest[m];
+    const count = inApp.counts[m] ?? 0;
+    if (!latest) {
+      return `<div class="battery-inapp__row battery-inapp__row--none">
+        <span class="battery-inapp__name">${inAppModuleLabel(m)}</span>
+        <span class="battery-inapp__latest">no ${m.toUpperCase()} sessions yet</span>
+        <span class="battery-inapp__count">—</span>
+      </div>`;
+    }
+    return `<div class="battery-inapp__row">
+      <span class="battery-inapp__name">${inAppModuleLabel(m)}</span>
+      <span class="battery-inapp__latest">${formatInAppScore(m, latest.score)}</span>
+      <span class="battery-inapp__count">${count} run${count === 1 ? '' : 's'}</span>
+    </div>`;
+  }).join('');
+  return `
+    <div class="battery-inapp">
+      <div class="battery-inapp__head">
+        <span class="t-eyebrow">What you've trained</span>
+        <span class="battery-inapp__hint">in-app module history, last 200 sessions</span>
+      </div>
+      <div class="battery-inapp__rows">${rows}</div>
+    </div>`;
 }
 
-function makeProgress(host: HTMLElement, ix: number, total: number) {
-  const wrap = document.createElement('div');
-  wrap.className = 'battery-controller__progress';
-  for (let i = 0; i < total; i++) {
-    const seg = document.createElement('div');
-    seg.className = 'battery-controller__seg';
-    if (i < ix) seg.dataset.done = 'true';
-    if (i === ix) seg.dataset.current = 'true';
-    wrap.appendChild(seg);
-  }
-  host.appendChild(wrap);
-  return wrap;
-}
-
-function renderResults(host: HTMLElement, run: BatteryRun, onSave: () => void, onAgain: () => void) {
+function renderResults(host: HTMLElement, run: BatteryRun, inApp: InAppSummary | null, onSave: () => void, onAgain: () => void) {
   host.innerHTML = '';
   const wrap = document.createElement('div');
   wrap.className = 'battery-results';
 
+  // Head
   const head = document.createElement('div');
   head.className = 'battery-results__head';
-  head.innerHTML = `<div class="t-eyebrow">Your profile</div><h2 class="t-h2">Your cognitive profile, ${run.ageBand ?? 'adult'}.</h2><p class="t-body">Every score is compared to the published mean for your age band, drawn from the cited studies. The lab does not compute a composite IQ — each task stands on its own.</p>`;
+  head.innerHTML = `<div class="t-eyebrow">Your profile</div><h2 class="t-h2">Your cognitive profile, age band ${run.ageBand ?? '25-34'}.</h2><p class="t-body">Every score is compared to the published mean for your age band, drawn from the cited studies. The lab does not compute a composite IQ — each task stands on its own.</p>`;
   wrap.appendChild(head);
 
+  // The 4 task rows
   const list = document.createElement('div');
   list.className = 'battery-results__list';
   for (const baseline of BATTERY) {
@@ -74,6 +74,9 @@ function renderResults(host: HTMLElement, run: BatteryRun, onSave: () => void, o
     const pct = percentileFromZ(z);
     const row = document.createElement('article');
     row.className = 'battery-results__row';
+    // The raw number: clamp negative z visualizations (e.g. z=-2.68
+    // is "1.5% percentile" but on the bar the fill is the percentile)
+    const fillPct = Math.max(0, Math.min(100, pct));
     row.innerHTML = `
       <div class="battery-results__row-head">
         <span class="battery-results__name">${baseline.name}</span>
@@ -81,30 +84,44 @@ function renderResults(host: HTMLElement, run: BatteryRun, onSave: () => void, o
       </div>
       <div class="battery-results__row-body">
         <div class="battery-results__score">
-          <div class="battery-results__raw">${score.raw}${baseline.unit.startsWith('ms') ? ' <span class="battery-results__unit">ms</span>' : baseline.unit.startsWith('%') ? '<span class="battery-results__unit">%</span>' : ''}</div>
-          <div class="battery-results__meta">${baseline.id === 'reading_span' ? 'letters correct' : baseline.unit.includes('ms') ? 'Stroop effect' : 'your score'}</div>
+          <div class="battery-results__raw">${score.raw}<span class="battery-results__unit">${baseline.displayUnit}</span></div>
+          <div class="battery-results__meta">${baseline.displayMeta}</div>
         </div>
         <div class="battery-results__compare">
-          <div class="battery-results__z">z = ${z >= 0 ? '+' : ''}${z.toFixed(2)}</div>
           <div class="battery-results__pct">${pct}<sup>th</sup> percentile, age band ${run.ageBand ?? '25-34'}</div>
           <div class="battery-results__bar">
-            <div class="battery-results__bar-fill" style="width: ${pct}%"></div>
-            <div class="battery-results__bar-mean" style="left: 50%"></div>
+            <div class="battery-results__bar-fill" style="width: ${fillPct}%"></div>
+            <div class="battery-results__bar-mean" style="left: 50%" title="Published mean (50th percentile)"></div>
+            <div class="battery-results__bar-z" style="left: ${Math.max(0, Math.min(100, 50 + z * 15))}%" title="You (z = ${z >= 0 ? '+' : ''}${z.toFixed(2)})"></div>
           </div>
-          <div class="battery-results__bar-labels"><span>lower</span><span>published mean</span><span>higher</span></div>
+          <div class="battery-results__bar-labels">
+            <span>lower</span>
+            <span class="battery-results__bar-label-mean">published mean</span>
+            <span>higher</span>
+          </div>
         </div>
-        <div class="battery-results__interp">${baseline.interpret(z)}</div>
-        <div class="battery-results__cite">${baseline.citation} · ${baseline.predictedTransfer}</div>
-      </div>`;
+      </div>
+      <div class="battery-results__interp">${baseline.interpret(z)}</div>
+      <div class="battery-results__cite">${baseline.citation} · ${baseline.predictedTransfer}</div>`;
     list.appendChild(row);
   }
   wrap.appendChild(list);
 
+  // In-app training summary, if we have any
+  if (inApp && Object.keys(inApp.latest).length > 0) {
+    const inAppBlock = document.createElement('div');
+    inAppBlock.className = 'battery-results__inapp';
+    inAppBlock.innerHTML = renderInAppBlock(inApp);
+    wrap.appendChild(inAppBlock);
+  }
+
+  // Honest closing note
   const note = document.createElement('div');
   note.className = 'battery-results__note';
   note.innerHTML = `<p class="t-body"><strong>On transfer.</strong> ${BATTERY[0]?.predictedTransfer ?? ''} The lab will compare your next battery against this one and report the delta honestly — including the cases where the in-app modules improve but the transfer battery doesn't.</p>`;
   wrap.appendChild(note);
 
+  // Actions
   const actions = document.createElement('div');
   actions.className = 'battery-results__actions';
   const again = document.createElement('button');
@@ -154,14 +171,14 @@ function renderIntro(host: HTMLElement, ageBand: AgeBand | null, onStart: () => 
   host.appendChild(wrap);
 }
 
-function renderRest(host: HTMLElement, next: TaskHandle, onContinue: () => void) {
+function renderRest(host: HTMLElement, next: TaskHandle, baseline: TaskBaseline, onContinue: () => void) {
   host.innerHTML = '';
   const wrap = document.createElement('div');
   wrap.className = 'battery-rest';
   wrap.innerHTML = `
-    <div class="t-eyebrow">Next up</div>
+    <div class="t-eyebrow">Next up · Task ${BATTERY_TASKS.findIndex(t => t.id === next.id) + 1} of ${BATTERY_TASKS.length}</div>
     <h3 class="t-h3">${next.name}</h3>
-    <p class="t-body">Take a breath. There is no score for this rest, and no streak to keep. Press the button when you're ready.</p>`;
+    <p class="t-body">${baseline.construct}. ${next.totalTrials} trials. Take a breath. There is no score for this rest, and no streak to keep. Press the button when you're ready.</p>`;
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'btn btn--primary';
@@ -176,11 +193,15 @@ export const batteryController: BatteryControllerHandle = {
     let taskIdx = 0;
     const scores: Record<string, TaskScore> = {};
     const startedAt = Date.now();
-    const progressEl: HTMLElement | null = null;
     const taskHost = document.createElement('div');
     taskHost.className = 'battery-controller__task';
     host.appendChild(taskHost);
     let activeTeardown: (() => void) | null = null;
+    let inAppCache: InAppSummary | null = null;
+
+    function loadInAppBg() {
+      void loadInAppSummary().then(s => { inAppCache = s; });
+    }
 
     function runNext() {
       if (activeTeardown) { activeTeardown(); activeTeardown = null; }
@@ -198,20 +219,20 @@ export const batteryController: BatteryControllerHandle = {
           }
         }
         const run: BatteryRun = { ageBand, startedAt, finishedAt, scores, zscores, percentiles };
-        renderResults(taskHost, run, () => onComplete(run), () => {
-          // Run again: reset and re-render intro
-          taskIdx = 0;
-          for (const k of Object.keys(scores)) delete scores[k];
-          taskHost.innerHTML = '';
-          renderIntro(taskHost, ageBand, () => runNext());
+        // Pull a fresh in-app summary for the comparison block
+        void loadInAppSummary(true).then((s) => {
+          inAppCache = s;
+          renderResults(taskHost, run, inAppCache, () => onComplete(run), () => {
+            taskIdx = 0;
+            for (const k of Object.keys(scores)) delete scores[k];
+            taskHost.innerHTML = '';
+            renderIntro(taskHost, ageBand, () => runNext());
+          });
         });
         return;
       }
       const t = BATTERY_TASKS[taskIdx];
-      const baseline = BATTERY.find(b => b.id === t.id)!;
       taskHost.innerHTML = '';
-      makeHeader(taskHost, t.name, baseline.construct, taskIdx + 1, BATTERY_TASKS.length);
-      makeProgress(taskHost, taskIdx, BATTERY_TASKS.length);
       const taskMount = document.createElement('div');
       taskMount.className = 'battery-controller__mount';
       taskHost.appendChild(taskMount);
@@ -219,13 +240,20 @@ export const batteryController: BatteryControllerHandle = {
         scores[t.id] = s;
         taskIdx++;
         if (taskIdx < BATTERY_TASKS.length) {
-          // Inter-task rest
-          renderRest(taskHost, BATTERY_TASKS[taskIdx], () => runNext());
+          renderRest(taskHost, BATTERY_TASKS[taskIdx], BATTERY.find(b => b.id === BATTERY_TASKS[taskIdx].id)!, () => runNext());
         } else {
           runNext();
         }
+      }, () => {
+        // Aborted: re-render intro
+        if (activeTeardown) { activeTeardown(); activeTeardown = null; }
+        taskHost.innerHTML = '';
+        renderIntro(taskHost, ageBand, () => runNext());
       });
     }
+
+    // Background load of in-app summary
+    loadInAppBg();
 
     // Start with the intro screen
     renderIntro(taskHost, ageBand, () => runNext());
@@ -233,7 +261,6 @@ export const batteryController: BatteryControllerHandle = {
     return () => {
       if (activeTeardown) activeTeardown();
       taskHost.innerHTML = '';
-      void progressEl;
     };
   }
 };

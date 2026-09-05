@@ -21,6 +21,10 @@ export type TaskBaseline = {
   name: string;
   construct: string;       // which CHC ability / executive function
   unit: string;            // ms, accuracy, items correct
+  // Display unit (the suffix after the raw number on the results page)
+  displayUnit: string;
+  // Display meta (the small label under the raw number, e.g. "Stroop effect")
+  displayMeta: string;
   direction: Direction;
   // Published mean and SD by age band. Means and SDs are best-available
   // approximations from the literature cited below.
@@ -43,6 +47,8 @@ const STROOP: TaskBaseline = {
   name: 'Stroop effect',
   construct: 'Inhibitory control (executive function)',
   unit: 'ms (incongruent − congruent)',
+  displayUnit: 'ms',
+  displayMeta: 'Stroop effect',
   direction: 'lower_is_better',
   byAge: {
     '18-24': { mean: 78, sd: 28, n: 240 },
@@ -53,7 +59,7 @@ const STROOP: TaskBaseline = {
     '65+':   { mean: 156, sd: 56, n: 180 }
   },
   interpret: (z) => {
-    if (z < -0.5) return 'Faster inhibition than the published average for your age band.';
+    if (z < -0.5) return 'Faster inhibition than the published average for your age band. The Stroop effect tends to grow ~1ms per year of age after 20.';
     if (z <  0.5) return 'Within the published range for your age band.';
     if (z <  1.5) return 'Slower than average — the Stroop effect grows with age; this is normal, but it is also trainable.';
     return 'Materially slower than age peers. If this is a sudden change, see a clinician; if stable, training can help.';
@@ -73,6 +79,8 @@ const INSPECTION_TIME: TaskBaseline = {
   name: 'Inspection time',
   construct: 'Processing speed (Gs)',
   unit: 'ms threshold (75% correct)',
+  displayUnit: 'ms',
+  displayMeta: 'Inspection-time threshold',
   direction: 'lower_is_better',
   byAge: {
     '18-24': { mean: 102, sd: 24, n: 320 },
@@ -86,7 +94,7 @@ const INSPECTION_TIME: TaskBaseline = {
     if (z < -0.5) return 'Faster perceptual processing than the published average for your age band. IT correlates with fluid intelligence at r ≈ .50.';
     if (z <  0.5) return 'Typical perceptual speed for your age band.';
     if (z <  1.5) return 'Slower than average — processing speed declines ~1ms/year after age 25; the slope is well-replicated.';
-    return 'Materially slower than age peers. Discuss with a clinician if this is sudden.';
+    return 'Slower than age peers at the test ceiling. The 200ms limit in this short battery means we cannot distinguish "very slow" from "slower than the test can measure." Take the battery again on a desktop with a keyboard, and consult a clinician if you suspect a real change.';
   },
   citation: 'Deary, Penke & Johnson (2010); Jensen (1998).',
   sourceUrl: 'https://doi.org/10.1037/a0017900',
@@ -102,6 +110,8 @@ const MENTAL_ROTATION: TaskBaseline = {
   name: 'Mental rotation',
   construct: 'Visual processing (Gv)',
   unit: '% correct (12 mixed-angle trials)',
+  displayUnit: '%',
+  displayMeta: 'Accuracy on rotated figures',
   direction: 'higher_is_better',
   byAge: {
     '18-24': { mean: 78, sd: 12, n: 280 },
@@ -114,8 +124,8 @@ const MENTAL_ROTATION: TaskBaseline = {
   interpret: (z) => {
     if (z >  0.5) return 'Better than the published average for your age band. Mental rotation peaks in the 20s and declines slowly.';
     if (z > -0.5) return 'Typical mental rotation for your age band.';
-    if (z > -1.5) return 'Slightly below average — this domain is trainable with practice.';
-    return 'Materially below age peers. Spatial training has shown transfer to mathematics (d ≈ 0.30, Uttal et al. 2013 meta).';
+    if (z > -1.5) return 'Slightly below average — this domain is trainable with practice (Uttal et al. 2013).';
+    return 'Well below age peers on this 12-trial set. The 50% chance baseline matters: if you\'re near chance, the task may be unfamiliar rather than a real ability gap. Try the battery again with the rotation angles visible.';
   },
   citation: 'Shepard & Metzler (1971); Voyer, Voyer & Bryden (1995); Uttal et al. (2013).',
   sourceUrl: 'https://doi.org/10.1126/science.181.4103.916',
@@ -131,6 +141,8 @@ const READING_SPAN: TaskBaseline = {
   name: 'Reading span',
   construct: 'Working memory capacity (Gsm)',
   unit: 'items correct (3 sets × 3)',
+  displayUnit: '/9',
+  displayMeta: 'letters in correct position',
   direction: 'higher_is_better',
   byAge: {
     '18-24': { mean: 4.2, sd: 1.1, n: 220 },
@@ -144,7 +156,7 @@ const READING_SPAN: TaskBaseline = {
     if (z >  0.5) return 'Higher than the published average for your age band. Complex span predicts reading comprehension and fluid intelligence.';
     if (z > -0.5) return 'Typical complex span for your age band.';
     if (z > -1.5) return 'Slightly below average — working memory capacity is moderately trainable (Jaeggi & Buschkuehl 2008).';
-    return 'Materially below age peers. Reading span is the strongest single predictor of reading comprehension in the literature.';
+    return 'Below age peers on this short 9-item set. The 3-set ceiling is the lab\'s quick measure; longer batteries (15-20 items) would refine the estimate.';
   },
   citation: 'Daneman & Carpenter (1980); Conway, Kane & Engle (2005).',
   sourceUrl: 'https://doi.org/10.1016/S0010-0277(99)00088-4',

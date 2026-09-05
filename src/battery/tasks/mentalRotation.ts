@@ -15,10 +15,10 @@ function handSvg(): SVGSVGElement {
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg') as SVGSVGElement;
   svg.setAttribute('viewBox', '0 0 100 100');
-  svg.setAttribute('width', '110');
-  svg.setAttribute('height', '110');
+  svg.setAttribute('width', '160');
+  svg.setAttribute('height', '160');
   svg.setAttribute('aria-hidden', 'true');
-  // Palm + 4 fingers + thumb, very simple
+  // Palm
   const palm = document.createElementNS(ns, 'rect');
   palm.setAttribute('x', '38');
   palm.setAttribute('y', '40');
@@ -44,7 +44,7 @@ function handSvg(): SVGSVGElement {
     r.setAttribute('fill', 'currentColor');
     svg.appendChild(r);
   }
-  // Thumb (sticks out to the right at the top of the palm)
+  // Thumb
   const thumb = document.createElementNS(ns, 'rect');
   thumb.setAttribute('x', '60');
   thumb.setAttribute('y', '38');
@@ -56,27 +56,31 @@ function handSvg(): SVGSVGElement {
   return svg;
 }
 
-// Mirror the hand: flip horizontally. The thumb moves to the left.
-// (kept as a util for future paper-style figures; not currently used
-// because we draw the mirror by applying scaleX(-1) inline)
-function _mirrorSvg(src: SVGSVGElement): SVGSVGElement {
-  const m = src.cloneNode(true) as SVGSVGElement;
-  m.setAttribute('style', 'transform: scaleX(-1);');
-  return m;
-}
-void _mirrorSvg;
-
 export const mentalRotationTask: TaskHandle = {
   id: 'mental_rotation',
   name: 'Mental rotation',
-  mount(host, onComplete) {
+  totalTrials: 12,
+  mount(host, onComplete, onAbort) {
     const trials: RotationTrial[] = [...ROTATION_TRIALS].sort(() => Math.random() - 0.5);
     let i = 0;
     let correct = 0;
     let disposed = false;
     let nextTimer: number | null = null;
-    let keyHandler: ((e: KeyboardEvent) => void) | null = null;
     const start = Date.now();
+
+    const header = document.createElement('div');
+    header.className = 'battery-task-head';
+    const progress = document.createElement('div');
+    progress.className = 'battery-task-head__progress';
+    const counter = document.createElement('div');
+    counter.className = 'battery-task-head__counter';
+    const exitBtn = document.createElement('button');
+    exitBtn.type = 'button';
+    exitBtn.className = 'battery-task-head__exit';
+    exitBtn.textContent = 'Exit battery';
+    header.appendChild(progress);
+    header.appendChild(counter);
+    header.appendChild(exitBtn);
 
     const wrap = document.createElement('div');
     wrap.className = 'battery-mr__wrap';
@@ -84,17 +88,41 @@ export const mentalRotationTask: TaskHandle = {
     leftBox.className = 'battery-mr__hand battery-mr__hand--ref';
     const rightBox = document.createElement('div');
     rightBox.className = 'battery-mr__hand battery-mr__hand--target';
+    const arrow = document.createElement('div');
+    arrow.className = 'battery-mr__arrow';
+    arrow.textContent = '→';
+    const refHand = handSvg();
+    const targetHand = handSvg();
+    leftBox.appendChild(refHand);
+    rightBox.appendChild(targetHand);
+    wrap.appendChild(leftBox);
+    wrap.appendChild(arrow);
+    wrap.appendChild(rightBox);
+
+    // The question text shows the angle. This is honest — the user
+    // needs the angle to know whether the rotation seems plausible.
+    const angleLabel = document.createElement('div');
+    angleLabel.className = 'battery-mr__angle';
+
     const prompt = document.createElement('div');
     prompt.className = 'battery-mr__prompt';
-    prompt.innerHTML = 'Same hand, rotated? Press <strong>F</strong> · Mirror? Press <strong>J</strong>';
-    const refHand = handSvg();
-    const targetHandBase = handSvg();
-    leftBox.appendChild(refHand);
-    rightBox.appendChild(targetHandBase);
-    wrap.appendChild(leftBox);
-    wrap.appendChild(rightBox);
+    prompt.innerHTML = 'Same hand, rotated? Press <kbd>F</kbd> · Mirror? Press <kbd>J</kbd>';
+
+    host.appendChild(header);
     host.appendChild(wrap);
+    host.appendChild(angleLabel);
     host.appendChild(prompt);
+
+    function updateProgress() {
+      counter.textContent = `${i} / ${trials.length}`;
+      progress.style.setProperty('--w', `${(i / trials.length) * 100}%`);
+    }
+
+    function abort() {
+      if (disposed) return;
+      disposed = true;
+      if (onAbort) onAbort();
+    }
 
     function next() {
       if (disposed) return;
@@ -109,37 +137,43 @@ export const mentalRotationTask: TaskHandle = {
         return;
       }
       const t = trials[i];
-      // Always start with the right hand pointing up
-      refHand.setAttribute('style', `transform: rotate(0deg);`);
-      // Target: same hand rotated by t.angle, OR mirror
+      refHand.setAttribute('style', 'transform: rotate(0deg);');
       if (t.mirror) {
-        targetHandBase.setAttribute('style', `transform: rotate(${t.angle}deg) scaleX(-1);`);
+        targetHand.setAttribute('style', `transform: rotate(${t.angle}deg) scaleX(-1); transform-origin: center;`);
       } else {
-        targetHandBase.setAttribute('style', `transform: rotate(${t.angle}deg);`);
+        targetHand.setAttribute('style', `transform: rotate(${t.angle}deg); transform-origin: center;`);
       }
+      angleLabel.textContent = `Rotation: ${t.angle}°`;
+      updateProgress();
     }
 
-    keyHandler = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       if (disposed) return;
+      const t = e.target as HTMLElement;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
       const k = e.key.toLowerCase();
+      if (k === 'escape') { e.preventDefault(); abort(); return; }
       if (k !== 'f' && k !== 'j') return;
       e.preventDefault();
-      const t = trials[i];
-      if (!t) return;
-      // 'f' = same (rotated); 'j' = mirror
+      const trial = trials[i];
+      if (!trial) return;
       const userSays = k === 'f' ? 'same' : 'mirror';
-      if (userSays === t.correctIs) correct++;
+      if (userSays === trial.correctIs) correct++;
       i++;
       if (nextTimer) clearTimeout(nextTimer);
-      nextTimer = window.setTimeout(next, 200);
+      nextTimer = window.setTimeout(next, 250);
     };
 
-    window.addEventListener('keydown', keyHandler);
+    const onExit = () => abort();
+
+    window.addEventListener('keydown', onKey);
+    exitBtn.addEventListener('click', onExit);
     next();
 
     return () => {
       disposed = true;
-      if (keyHandler) window.removeEventListener('keydown', keyHandler);
+      window.removeEventListener('keydown', onKey);
+      exitBtn.removeEventListener('click', onExit);
       if (nextTimer) clearTimeout(nextTimer);
       host.innerHTML = '';
     };

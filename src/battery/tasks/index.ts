@@ -14,5 +14,3 @@ export const BATTERY_TASKS: TaskHandle[] = [
   mentalRotationTask,
   readingSpanTask
 ];
-
-export { type TaskHandle, type TaskScore } from '../taskRunner';

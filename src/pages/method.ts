@@ -16,9 +16,9 @@ export const methodPage: PageModule = {
         <p class="t-lead">
           The Wideweave loop is the same for every module. You generate,
           the engine scores, your skill graph updates, and the difficulty
-          moves to the edge of your capacity. Every 21 days, a
-          structurally unrelated transfer battery checks whether any of
-          it actually generalises. We tell you when it doesn't.
+          moves to the edge of your capacity. On demand, you can take a
+          structurally unrelated transfer battery that checks whether any
+          of it actually generalises. We tell you when it doesn't.
         </p>
       </div>
     </section>

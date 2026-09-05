@@ -75,24 +75,24 @@ export const principlesPage: PageModule = {
 
         <div class="method__rules">
           <div class="method__rule">
-            <span class="method__rule-ix">11</span>
-            <h3>Cohort 11 · the original</h3>
-            <p>The first cohort exposed the "fake IQ" problem. The initial prototype merged the four skills into a single score. Users who trained for 8 weeks reported a feeling of being worse at things, even as the score went up. We removed the merged score in cohort 12.</p>
+            <span class="method__rule-ix">a</span>
+            <h3>What this page is honest about</h3>
+            <p>The principles above are product rules. They are not aspirational — they are the lines in the sand that the platform is built to enforce. Where the platform fails one of them, the failure is the bug, not the rule.</p>
           </div>
           <div class="method__rule">
-            <span class="method__rule-ix">12</span>
-            <h3>Cohort 12 · honest feedback</h3>
-            <p>Replaced the merged score with four independent graphs. Added the per-attempt feedback "you are above / at / below the cohort median" so users had honest context. Cohort retention went from 38% to 51% in 8 weeks — honesty helped.</p>
+            <span class="method__rule-ix">b</span>
+            <h3>What this page is not</h3>
+            <p>There are no made-up cohort numbers, no fake retention statistics, no invented "first we tried X, then we tried Y" backstory. The platform is honest about its boundaries; this page is honest about being a single product with a single set of decisions.</p>
           </div>
           <div class="method__rule">
-            <span class="method__rule-ix">13</span>
-            <h3>Cohort 13 · the transfer battery</h3>
-            <p>Added the five-task quarterly transfer battery. The first run of the battery was the moment we learned that in-app gains were running ~4× larger than transfer gains. We rebuilt the marketing site to be honest about it.</p>
+            <span class="method__rule-ix">c</span>
+            <h3>The transfer battery is the test</h3>
+            <p>When the lab is asked "does it work?", the answer is whatever the transfer battery shows, for each user, on a per-task basis. If the in-app graphs go up and the transfer battery doesn't, that is the honest answer. The lab will say so on the /transfer page, every time.</p>
           </div>
           <div class="method__rule">
-            <span class="method__rule-ix">14</span>
-            <h3>Cohort 14 · current</h3>
-            <p>The current cohort is the first to train with the gap-aware interface: the lab surfaces the gap explicitly. The cohort retention is 58% at 12 weeks. The lab is collecting LLM-usage data on the side to plan the 2026 LLM-assistance study.</p>
+            <span class="method__rule-ix">d</span>
+            <h3>What to read next</h3>
+            <p>The <a href="/method">method page</a> describes how the four modules are scored. The <a href="/transfer">transfer battery page</a> describes the four research-grade tasks that test whether any of it transfers. The <a href="/about">about page</a> describes who built the platform and the limits of the science it's based on.</p>
           </div>
         </div>
       </div>

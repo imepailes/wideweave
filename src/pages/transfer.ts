@@ -11,6 +11,7 @@ import { getStoredAgeBand, setStoredAgeBand } from '../lib/userSettings';
 import { type AgeBand, BATTERY } from '../lib/batteryDistributions';
 import { getAuthState, onAuthChange } from '../lib/auth';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
+import { loadInAppSummary, inAppModuleLabel, formatInAppScore, type InAppSummary } from '../lib/inAppHistory';
 
 const AGE_BANDS: AgeBand[] = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
 
@@ -23,6 +24,61 @@ function renderAgeSelect(current: AgeBand | null): string {
       </div>
       <p class="battery-age__note">Used to compare your score to the published mean. Stored locally; never sent to the server without an explicit sync. Default: 25-34.</p>
     </div>`;
+}
+
+function renderInAppBlock(summary: InAppSummary): string {
+  const totalRuns = Object.values(summary.counts).reduce((a, b) => a + b, 0);
+  if (totalRuns === 0) {
+    return `
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
+            <div class="section-head__meta">
+              <span class="rule"></span>
+              <span class="ix">02</span>
+              <span>What you've trained</span>
+            </div>
+            <h2 class="t-h2">No in-app training yet. The transfer battery is the first measurement.</h2>
+            <p class="t-body">The whole point of the platform is to ask: do the in-app modules move the transfer battery? You can't ask that without a baseline — the battery you take now becomes the first dot. The in-app modules can come later.</p>
+            <div class="cta__actions" style="margin-top: 16px;">
+              <a class="btn btn--primary" href="/modules/divergent-association">Start a 12-minute session</a>
+            </div>
+          </div>
+        </div>
+      </section>`;
+  }
+  const modules: ('dat' | 'rat' | 'cj' | 'nb')[] = ['dat', 'rat', 'cj', 'nb'];
+  const rows = modules.map(m => {
+    const latest = summary.latest[m];
+    const count = summary.counts[m] ?? 0;
+    if (!latest) {
+      return `<div class="battery-inapp__row battery-inapp__row--none">
+        <span class="battery-inapp__name">${inAppModuleLabel(m)}</span>
+        <span class="battery-inapp__latest">—</span>
+        <span class="battery-inapp__count">0 runs</span>
+      </div>`;
+    }
+    return `<div class="battery-inapp__row">
+      <span class="battery-inapp__name">${inAppModuleLabel(m)}</span>
+      <span class="battery-inapp__latest">${formatInAppScore(m, latest.score)}</span>
+      <span class="battery-inapp__count">${count} run${count === 1 ? '' : 's'}</span>
+    </div>`;
+  }).join('');
+  return `
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-head__meta">
+            <span class="rule"></span>
+            <span class="ix">02</span>
+            <span>What you've trained</span>
+          </div>
+          <h2 class="t-h2">${totalRuns} in-app session${totalRuns === 1 ? '' : 's'} on file.</h2>
+          <p class="t-body">These are your four training modules, with the latest score and run count. The transfer battery is the thing the lab will compare these against — after you take it, this section will sit directly above the results so you can read the gap in one place.</p>
+        </div>
+        <div class="battery-inapp">${rows}</div>
+      </div>
+    </section>`;
 }
 
 function renderHistory(rows: BatteryRunRow[]): string {
@@ -166,6 +222,8 @@ export const transferPage: PageModule = {
         <div id="transfer-battery" class="battery-mount"></div>
       </div>
     </section>
+
+    <section class="section" data-transfer-inapp></section>
 
     <section class="section" data-transfer-history></section>
 
@@ -323,6 +381,22 @@ create policy "battery_insert_own" on public.battery_runs
     // Initial mount
     mountBatteryWith(storedBand);
     await refreshHistory();
+
+    // In-app training block — refresh on auth change
+    const inAppHost = document.querySelector<HTMLElement>('[data-transfer-inapp]');
+    async function refreshInApp() {
+      if (!inAppHost) return;
+      const auth = getAuthState();
+      if (auth.status !== 'signed-in' || !SUPABASE_CONFIGURED) {
+        inAppHost.innerHTML = '';
+        return;
+      }
+      const summary = await loadInAppSummary();
+      inAppHost.innerHTML = renderInAppBlock(summary);
+    }
+    await refreshInApp();
+    const offAuthInApp = onAuthChange(() => { void refreshInApp(); });
+    cleanups.push(offAuthInApp);
 
     // Refresh history when auth state changes (loading → signed-in)
     const offAuth = onAuthChange(() => { void refreshHistory(); });
