@@ -4,7 +4,7 @@
 
 import { BATTERY_TASKS } from './tasks';
 import type { TaskHandle, TaskScore } from './taskRunner';
-import { BATTERY, zScore, percentileFromZ, type AgeBand, type TaskBaseline } from '../lib/batteryDistributions';
+import { BATTERY, compareToPublished, comparisonText, type Comparison, type AgeBand, type TaskBaseline } from '../lib/batteryDistributions';
 import { loadInAppSummary, formatInAppScore, inAppModuleLabel, type InAppSummary } from '../lib/inAppHistory';
 
 export type BatteryRun = {
@@ -13,10 +13,8 @@ export type BatteryRun = {
   finishedAt: number;
   // Map of task id -> score
   scores: Record<string, TaskScore>;
-  // Map of task id -> z-score
-  zscores: Record<string, number>;
-  // Map of task id -> percentile
-  percentiles: Record<string, number>;
+  // Map of task id -> comparison result ('below' / 'within' / 'above')
+  comparisons: Record<string, Comparison>;
 };
 
 export type BatteryControllerHandle = {
@@ -61,7 +59,7 @@ function renderResults(host: HTMLElement, run: BatteryRun, inApp: InAppSummary |
   // Head
   const head = document.createElement('div');
   head.className = 'battery-results__head';
-  head.innerHTML = `<div class="t-eyebrow">Your profile</div><h2 class="t-h2">Your cognitive profile, age band ${run.ageBand ?? '25-34'}.</h2><p class="t-body">Every score is compared to the published mean for your age band, drawn from the cited studies. The lab does not compute a composite IQ — each task stands on its own.</p>`;
+  head.innerHTML = `<div class="t-eyebrow">Your profile</div><h2 class="t-h2">Your cognitive profile, age band ${run.ageBand ?? '25-34'}.</h2><p class="t-body">Every score is compared to the <strong>published healthy-adult range</strong> from the cited studies — not to a fabricated age-stratified mean. The lab does not compute a composite IQ — each task stands on its own, and the comparison is honest: within, below, or above the published range. Where the literature doesn't stratify by age, we don't either.</p>`;
   wrap.appendChild(head);
 
   // The 4 task rows
@@ -70,13 +68,23 @@ function renderResults(host: HTMLElement, run: BatteryRun, inApp: InAppSummary |
   for (const baseline of BATTERY) {
     const score = run.scores[baseline.id];
     if (!score) continue;
-    const z = zScore(baseline, score.raw, run.ageBand);
-    const pct = percentileFromZ(z);
+    const cmp = compareToPublished(baseline, score.raw);
+    const cmpText = comparisonText(baseline, score.raw, run.ageBand);
     const row = document.createElement('article');
-    row.className = 'battery-results__row';
-    // The raw number: clamp negative z visualizations (e.g. z=-2.68
-    // is "1.5% percentile" but on the bar the fill is the percentile)
-    const fillPct = Math.max(0, Math.min(100, pct));
+    row.className = `battery-results__row battery-results__row--${cmp}`;
+    // The bar shows the user's position within the published range,
+    // extended beyond on either side. We do NOT claim a percentile.
+    const range = baseline.published;
+    // Visualize score relative to range: 0% = range min, 100% = range max.
+    // If score is outside the range, the marker sits at the edge.
+    const visualSpan = range.max - range.min;
+    const visualMin = range.min - visualSpan * 0.3;
+    const visualMax = range.max + visualSpan * 0.3;
+    const visualRange = visualMax - visualMin;
+    const fillPct = Math.max(0, Math.min(100, ((score.raw - visualMin) / visualRange) * 100));
+    const withinPct = ((range.max - range.min) / visualRange) * 100;
+    const withinOffsetPct = ((range.min - visualMin) / visualRange) * 100;
+    const directionLabel = baseline.direction === 'lower_is_better' ? 'lower is better' : 'higher is better';
     row.innerHTML = `
       <div class="battery-results__row-head">
         <span class="battery-results__name">${baseline.name}</span>
@@ -84,25 +92,25 @@ function renderResults(host: HTMLElement, run: BatteryRun, inApp: InAppSummary |
       </div>
       <div class="battery-results__row-body">
         <div class="battery-results__score">
-          <div class="battery-results__raw">${score.raw}<span class="battery-results__unit">${baseline.displayUnit}</span></div>
+          <div class="battery-results__raw">${score.raw}<span class="battery-results__unit">${range.unit}</span></div>
           <div class="battery-results__meta">${baseline.displayMeta}</div>
         </div>
         <div class="battery-results__compare">
-          <div class="battery-results__pct">${pct}<sup>th</sup> percentile, age band ${run.ageBand ?? '25-34'}</div>
-          <div class="battery-results__bar">
-            <div class="battery-results__bar-fill" style="width: ${fillPct}%"></div>
-            <div class="battery-results__bar-mean" style="left: 50%" title="Published mean (50th percentile)"></div>
-            <div class="battery-results__bar-z" style="left: ${Math.max(0, Math.min(100, 50 + z * 15))}%" title="You (z = ${z >= 0 ? '+' : ''}${z.toFixed(2)})"></div>
+          <div class="battery-results__cmp battery-results__cmp--${cmp}">${cmp === 'within' ? 'Within published range' : cmp === 'below' ? (baseline.direction === 'lower_is_better' ? 'Faster than published' : 'Below published range') : (baseline.direction === 'lower_is_better' ? 'Slower than published' : 'Better than published')}</div>
+          <div class="battery-results__cmp-range">Published healthy-adult range: <strong>${range.min}–${range.max} ${range.unit}</strong></div>
+          <div class="battery-results__bar" title="${directionLabel}">
+            <div class="battery-results__bar-pub" style="left: ${withinOffsetPct.toFixed(1)}%; width: ${withinPct.toFixed(1)}%"></div>
+            <div class="battery-results__bar-z" style="left: ${fillPct.toFixed(1)}%" title="You (${score.raw} ${range.unit})"></div>
           </div>
           <div class="battery-results__bar-labels">
-            <span>lower</span>
-            <span class="battery-results__bar-label-mean">published mean</span>
-            <span>higher</span>
+            <span>${visualMin.toFixed(0)}</span>
+            <span class="battery-results__bar-label-mean">published range</span>
+            <span>${visualMax.toFixed(0)}</span>
           </div>
         </div>
       </div>
-      <div class="battery-results__interp">${baseline.interpret(z)}</div>
-      <div class="battery-results__cite">${baseline.citation} · ${baseline.predictedTransfer}</div>`;
+      <div class="battery-results__interp">${cmpText}</div>
+      <div class="battery-results__cite">${range.citation}${range.ageNote.effect ? ' · ' + range.ageNote.effect + ' (' + range.ageNote.source + ')' : ''} · ${baseline.predictedTransfer}</div>`;
     list.appendChild(row);
   }
   wrap.appendChild(list);
@@ -207,18 +215,15 @@ export const batteryController: BatteryControllerHandle = {
       if (activeTeardown) { activeTeardown(); activeTeardown = null; }
       if (taskIdx >= BATTERY_TASKS.length) {
         const finishedAt = Date.now();
-        const zscores: Record<string, number> = {};
-        const percentiles: Record<string, number> = {};
+        const comparisons: Record<string, Comparison> = {};
         for (const t of BATTERY_TASKS) {
           const s = scores[t.id];
           const baseline = BATTERY.find(b => b.id === t.id)!;
           if (s) {
-            const z = zScore(baseline, s.raw, ageBand);
-            zscores[t.id] = z;
-            percentiles[t.id] = percentileFromZ(z);
+            comparisons[t.id] = compareToPublished(baseline, s.raw);
           }
         }
-        const run: BatteryRun = { ageBand, startedAt, finishedAt, scores, zscores, percentiles };
+        const run: BatteryRun = { ageBand, startedAt, finishedAt, scores, comparisons };
         // Pull a fresh in-app summary for the comparison block
         void loadInAppSummary(true).then((s) => {
           inAppCache = s;

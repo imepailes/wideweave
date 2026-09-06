@@ -29,7 +29,12 @@ type ColorName = typeof COLOR_NAMES[number];
 const TRIALS_PER_SESSION = 60;
 const ITI_MIN_MS = 500;
 const ITI_MAX_MS = 800;
-const PUBLISHED_BASELINE_MS = 720; // MacLeod 1991, age 25-34, incongruent
+// MacLeod (1991) review reports typical adult incongruent RTs in
+// the 600-900ms range across the studies summarised. We do not have
+// an age-stratified mean+SD for 25-34 specifically; using a single
+// 720ms number as if it were a precise age-band baseline would be
+// false precision. We use the range instead.
+const PUBLISHED_RANGE = { minMs: 600, maxMs: 900, citation: 'MacLeod (1991), Psychological Bulletin 109(2), 163-203' };
 
 type Trial = {
   word: ColorName;
@@ -122,7 +127,15 @@ function renderChart(trials: Trial[], maxRT: number): string {
 function buildSummaryHTML(stats: ReturnType<typeof computeStats>, completed: number, elapsed: number, aborted: boolean, prior: SessionRow[], saveStatus: 'saved' | 'skipped' | 'failed', saveError: string | null): string {
   const last5 = prior.slice(0, 5);
   const last5Avg = last5.length > 0 ? mean(last5.map(r => r.score)) : null;
-  const deltaVsBaseline = stats.meanI - PUBLISHED_BASELINE_MS;
+  // Honest comparison to the published range, not a fabricated mean.
+  // For Stroop, lower incongruent RT is better. We compare against
+  // the published healthy-adult range from MacLeod 1991.
+  const inRange = stats.meanI >= PUBLISHED_RANGE.minMs && stats.meanI <= PUBLISHED_RANGE.maxMs;
+  const withinText = inRange
+    ? `Your mean incongruent RT (${Math.round(stats.meanI)}ms) is within the published healthy-adult range (${PUBLISHED_RANGE.minMs}–${PUBLISHED_RANGE.maxMs}ms).`
+    : stats.meanI < PUBLISHED_RANGE.minMs
+      ? `Your mean incongruent RT (${Math.round(stats.meanI)}ms) is below the published lower end of the healthy-adult range (${PUBLISHED_RANGE.minMs}–${PUBLISHED_RANGE.maxMs}ms) — faster than the published typical.`
+      : `Your mean incongruent RT (${Math.round(stats.meanI)}ms) is above the published upper end of the healthy-adult range (${PUBLISHED_RANGE.minMs}–${PUBLISHED_RANGE.maxMs}ms) — slower than the published typical.`;
   let compare = '';
   if (aborted) {
     compare = `<p>Session ended at trial ${completed}. Sessions save with at least 30 trials and 8 correct incongruent trials. The chart above shows what you got.</p>`;
@@ -134,12 +147,12 @@ function buildSummaryHTML(stats: ReturnType<typeof computeStats>, completed: num
       compare = `<p><strong>Not saved.</strong> Your result is real, but the save failed: <code>${saveError ?? 'unknown'}</code>. Try a session after running the migration.</p>`;
     }
   } else if (last5Avg == null && saveStatus === 'saved') {
-    compare = `<p>First saved session. Published mean for Stroop incongruent RT is ~${PUBLISHED_BASELINE_MS}ms (MacLeod 1991, age 25-34). You are <strong>${deltaVsBaseline > 0 ? '+' : ''}${Math.round(deltaVsBaseline)}ms</strong> from that. Future sessions will compare against you.</p>`;
+    compare = `<p>First saved session. ${withinText} Future sessions will compare against your own past sessions, not against the literature.</p>`;
   } else if (last5Avg != null) {
     const delta = stats.meanI - last5Avg;
     const sign = delta < 0 ? '−' : '+';
     const dir = delta < 0 ? 'faster' : 'slower';
-    compare = `<p>You are <strong>${sign}${Math.abs(Math.round(delta))}ms</strong> ${dir} than your last ${last5.length} session${last5.length === 1 ? '' : 's'} average. Vs the published 25-34 baseline (${PUBLISHED_BASELINE_MS}ms), this is <strong>${deltaVsBaseline > 0 ? '+' : ''}${Math.round(deltaVsBaseline)}ms</strong>.</p>`;
+    compare = `<p>You are <strong>${sign}${Math.abs(Math.round(delta))}ms</strong> ${dir} than your last ${last5.length} session${last5.length === 1 ? '' : 's'} average. ${withinText}</p>`;
   } else {
     // saveStatus === 'skipped' — less than 30 trials or too few correct incongruent
     compare = `<p>Session ended with ${completed} trials. Sessions save with at least 30 trials and 8 correct incongruent trials. The chart above shows what you got.</p>`;

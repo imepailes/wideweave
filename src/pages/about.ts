@@ -135,14 +135,16 @@ export const aboutPage: PageModule = {
     const statusEl = document.querySelector<HTMLElement>('[data-live="status"]');
     try {
       const snap = await refreshCohort();
-      if (statusEl) statusEl.textContent = snap.configured ? 'The lab' : 'The lab · not yet connected';
+      if (statusEl) statusEl.textContent = snap.configured ? 'The open lab' : 'The open lab · not yet connected';
       if (ctaEl) {
         if (!snap.configured) {
           ctaEl.textContent = 'A small, open lab. Set VITE_SUPABASE_URL to publish live counts.';
-        } else if (snap.weavers === 0) {
+        } else if (snap.sessions_total === 0) {
           ctaEl.textContent = 'A small, open lab. Be the first to train here.';
+        } else if (snap.sessions_total < 10) {
+          ctaEl.textContent = `A small, open lab. ${snap.sessions_total} session${snap.sessions_total === 1 ? '' : 's'} so far — too few to report as a cohort.`;
         } else {
-          ctaEl.textContent = `${snap.weavers.toLocaleString()} ${snap.weavers === 1 ? 'weaver' : 'weavers'} in the open lab. ${snap.sessions_total.toLocaleString()} session${snap.sessions_total === 1 ? '' : 's'} so far.`;
+          ctaEl.textContent = `${snap.sessions_total.toLocaleString()} session${snap.sessions_total === 1 ? '' : 's'} in the open lab, across ${snap.weavers.toLocaleString()} ${snap.weavers === 1 ? 'weaver' : 'weavers'}.`;
         }
       }
     } catch {

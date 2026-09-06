@@ -22,7 +22,7 @@ function renderAgeSelect(current: AgeBand | null): string {
       <div class="battery-age__row">
         ${AGE_BANDS.map(b => `<button type="button" data-band="${b}" class="battery-age__btn${current === b ? ' is-on' : ''}">${b}</button>`).join('')}
       </div>
-      <p class="battery-age__note">Used to compare your score to the published mean. Stored locally; never sent to the server without an explicit sync. Default: 25-34.</p>
+      <p class="battery-age__note">Used to show you the published age-related note (e.g. "+1ms/year after age 20" for Stroop). The lab does not have a precise age-stratified mean for these tasks; the comparison is to the published range, not to a fabricated age-band number. Default: 25-34.</p>
     </div>`;
 }
 
@@ -74,7 +74,7 @@ function renderInAppBlock(summary: InAppSummary): string {
             <span>What you've trained</span>
           </div>
           <h2 class="t-h2">${totalRuns} in-app session${totalRuns === 1 ? '' : 's'} on file.</h2>
-          <p class="t-body">These are your four training modules, with the latest score and run count. The transfer battery is the thing the lab will compare these against — after you take it, this section will sit directly above the results so you can read the gap in one place.</p>
+          <p class="t-body">These are your five training modules, with the latest score and run count. The transfer battery is the thing the lab will compare these against — after you take it, this section will sit directly above the results so you can read the gap in one place.</p>
         </div>
         <div class="battery-inapp">${rows}</div>
       </div>
@@ -144,13 +144,13 @@ function renderMethodBlock(): string {
             <span class="ix">04</span>
             <span>How the comparison works</span>
           </div>
-          <h2 class="t-h2">Published means, honest numbers.</h2>
+          <h2 class="t-h2">Published ranges, honest comparison.</h2>
         </div>
         <div class="method__rules">
           <div class="method__rule">
             <span class="method__rule-ix">A</span>
             <h3>What "compared to your age band" means</h3>
-            <p>Every score is converted to a <em>z-score</em> against the published mean and SD for your age band, drawn from the cited studies. A z of 0 is exactly average; +1 is one SD above (≈ 84th percentile).</p>
+            <p>Your score is compared to the <strong>published healthy-adult range</strong> for each task, drawn from the cited studies. The lab reports a directional result: <em>within</em>, <em>below</em>, or <em>above</em> the published range. We do not compute a z-score, because the literature does not provide an age-stratified mean and SD for most of these tasks at the precision the lab would need to call one honest. Where the literature <em>does</em> provide an age-stratified value, we use it; where it doesn't, we report the published range and the age-related note.</p>
           </div>
           <div class="method__rule">
             <span class="method__rule-ix">B</span>
@@ -198,8 +198,12 @@ export const transferPage: PageModule = {
           about 5 minutes, that measures what the in-app training
           actually transfers to. The tasks are not in the main lab
           — you can't practice them — and the results are compared
-          to the published mean for your age band, drawn from the
-          cited studies.
+          to the published healthy-adult range for each task, drawn
+          from the cited studies. The lab does not have a precise
+          age-stratified mean and SD for these tasks at adult age
+          bands, so the comparison is honest about that: a
+          directional result (within / below / above the published
+          range) rather than a fabricated percentile.
         </p>
         <div class="page-lead__meta page-lead__chips" data-battery-meta>
           <span class="pill pill--proved"><span class="dot"></span>Research-grade</span>
@@ -344,8 +348,7 @@ export const transferPage: PageModule = {
   finished_at timestamptz not null,
   time_s int not null,
   scores jsonb not null,
-  zscores jsonb not null,
-  percentiles jsonb not null,
+  comparisons jsonb not null,
   created_at timestamptz not null default now()
 );
 

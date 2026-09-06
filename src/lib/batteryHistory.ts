@@ -2,7 +2,7 @@
 
 import { supabase, SUPABASE_CONFIGURED } from './supabase';
 import { getAuthState } from './auth';
-import type { AgeBand } from './batteryDistributions';
+import type { AgeBand, Comparison } from './batteryDistributions';
 import type { BatteryRun } from '../battery/batteryController';
 
 export type BatteryRunRow = {
@@ -13,8 +13,9 @@ export type BatteryRunRow = {
   finished_at: string;
   time_s: number;
   scores: Record<string, { raw: number; trials: number; correct?: number; time_s: number; detail?: Record<string, unknown> }>;
-  zscores: Record<string, number>;
-  percentiles: Record<string, number>;
+  // Honest directional comparison: 'below' | 'within' | 'above' the
+  // published healthy-adult range. No fabricated percentile.
+  comparisons: Record<string, Comparison>;
   created_at: string;
 };
 
@@ -41,12 +42,11 @@ export async function saveBatteryRun(run: BatteryRun): Promise<{ ok: boolean; id
     finished_at: new Date(run.finishedAt).toISOString(),
     time_s: Math.round((run.finishedAt - run.startedAt) / 1000),
     scores: run.scores,
-    zscores: run.zscores,
-    percentiles: run.percentiles
+    comparisons: run.comparisons
   };
   const { data, error } = await supabase.from('battery_runs').insert(row).select('id').single();
   if (error) {
-    if (isMissingTable(error as { code?: string; message?: string; status?: number })) {
+    if (isMissingTable(error as { code?: string; message?: string; status?: number } | null)) {
       // Don't log loudly — the page surfaces a banner.
       return { ok: false, error: 'battery_runs table missing', needsMigration: true };
     }
@@ -63,12 +63,12 @@ export async function loadBatteryHistory(limit = 10): Promise<{ rows: BatteryRun
   if (auth.status !== 'signed-in') return { rows: [], needsMigration: false };
   const { data, error } = await supabase
     .from('battery_runs')
-    .select('id, user_id, age_band, started_at, finished_at, time_s, scores, zscores, percentiles, created_at')
+    .select('id, user_id, age_band, started_at, finished_at, time_s, scores, comparisons, created_at')
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) {
-    if (isMissingTable(error as { code?: string; message?: string; status?: number })) {
+    if (isMissingTable(error as { code?: string; message?: string; status?: number } | null)) {
       return { rows: [], needsMigration: true };
     }
     // eslint-disable-next-line no-console

@@ -124,6 +124,9 @@ export function initHeaderScroll(): void {
 
 // Update the live cohort counts shown in the footer. The cohort
 // loader falls back to a quiet placeholder when Supabase is unconfigured.
+// Below 10 sessions, we don't show the count at all — too small to
+// be meaningful. From 10-50 we show only the session count, not the
+// weaver count, because the weaver count below 50 is also small.
 import { refreshCohort } from './lib/cohort';
 export function initLiveCounts(): void {
   void refreshCohort().then((snap) => {
@@ -131,15 +134,17 @@ export function initLiveCounts(): void {
     weaversEls.forEach((el) => {
       if (!snap.configured) {
         el.textContent = 'v0.5 · lab not yet connected';
-      } else if (snap.weavers === 0) {
-        el.textContent = 'v0.5 · the lab is open · be the first';
+      } else if (snap.sessions_total < 10) {
+        el.textContent = 'v0.5 · open lab · too few sessions for a cohort count';
+      } else if (snap.sessions_total < 50) {
+        el.textContent = `v0.5 · open lab · ${snap.sessions_total} sessions so far`;
       } else {
-        el.textContent = `v0.5 · ${snap.weavers.toLocaleString()} ${snap.weavers === 1 ? 'weaver' : 'weavers'} in the lab`;
+        el.textContent = `v0.5 · open lab · ${snap.sessions_total.toLocaleString()} sessions · ${snap.weavers.toLocaleString()} ${snap.weavers === 1 ? 'weaver' : 'weavers'}`;
       }
     });
   }).catch(() => {
     document.querySelectorAll<HTMLElement>('[data-live="weavers"]').forEach((el) => {
-      el.textContent = 'v0.5 · cohort count unavailable';
+      el.textContent = 'v0.5 · open lab · cohort count unavailable';
     });
   });
 }

@@ -300,10 +300,11 @@ export const libraryPage: PageModule = {
               <a href="#cite-macleod-1991">MacLeod (1991)</a>.
               The interference effect (slower RTs on
               incongruent trials) is one of the most replicated
-              in experimental psychology. Mean incongruent RT
-              for a 25-34-year-old in
-              MacLeod's review is ~720ms; the platform
-              compares your session score to that baseline.
+              in experimental psychology. MacLeod's review
+              reports typical adult incongruent RTs in the
+              600-900ms range; the platform compares your
+              session score to that published range, not to
+              a fabricated age-band mean.
             </p>
             <p>
               <strong>What we know:</strong> the task measures
@@ -581,7 +582,7 @@ export const libraryPage: PageModule = {
           </li>
           <li id="cite-macleod-1991" class="library-bib__item">
             <span class="library-bib__cite">MacLeod, C. M. (1991). Half a century of research on the Stroop effect: An integrative review. <em>Psychological Bulletin, 109</em>(2), 163–203.</span>
-            <span class="library-bib__note">The canonical review of the Stroop literature. The 720ms baseline for 25–34-year-olds comes from the studies summarised here.</span>
+            <span class="library-bib__note">The canonical review of the Stroop literature. The 600-900ms healthy-adult incongruent-RT range used by the platform is drawn from the studies summarised here. The review does not provide an age-stratified mean for 25-34; the platform reports the published range, not a fabricated mean.</span>
             <span class="pill pill--proved"><span class="dot"></span>Proved</span>
           </li>
           <li id="cite-miller-1995" class="library-bib__item">
@@ -666,16 +667,20 @@ export const libraryPage: PageModule = {
           </li>
         </ol>
         <p class="library-prose__lede" style="margin-top: 32px;">
-          The platform cites what the science supports. Where
-          the evidence is mixed (Stroop transfer, n-back
-          transfer), the pill says "Mixed." Where the
-          evidence is speculation (whether reducing your
-          own Stroop effect via training translates to fewer
-          reading errors or better focus), the pill says
-          "Speculative." Where the evidence is the
-          consensus of the field, the pill says "Proved."
-          The pills are how the lab tells you what to
-          believe.
+          The platform cites what the science supports. The
+          pills are how the lab tells you what to believe.
+          19 entries are tagged <strong>Proved</strong>
+          (consensus of the field). 2 are tagged
+          <strong>Mixed</strong> (Jaeggi 2008 and Au 2018,
+          both about n-back transfer). The current
+          bibliography does not yet have a
+          <strong>Speculative</strong> entry — meaning
+          the platform has not yet cited a claim it does
+          not believe in. As the bibliography grows, any
+          new claim that the platform would call
+          speculation (rather than evidence or mixed
+          evidence) will be marked Speculative when
+          added.
         </p>
       </div>
     </section>

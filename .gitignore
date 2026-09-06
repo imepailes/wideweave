@@ -29,6 +29,7 @@ Thumbs.db
 # Verification scripts (throwaway — these are never part of the product)
 verify-*.cjs
 check-*.cjs
+audit/
 
 # The inner wideweave/ directory was a transient Vercel CLI workspace.
 # It has its own .git and is not part of this project.

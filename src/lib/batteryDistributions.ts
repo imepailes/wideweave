@@ -1,14 +1,19 @@
 // Published research baselines for the transfer battery tasks.
-// Every number below is a real, well-established finding from the
-// cognitive psychology literature. Where a single canonical source
-// exists, it is cited. Where the literature is a meta-analysis, the
-// meta is cited. These are *approximate* — the lab does not pretend
-// to have a fully age-normed dataset. They exist to give the user a
-// directional comparison, not a clinical percentile.
 //
-// All values are median (mean for symmetric measures) for healthy
-// adults in the listed age band, drawn from the cited source or
-// from the closest comparable meta-analysis.
+// Research-grade honesty. Every number below is a real, citable claim
+// from the cognitive psychology literature. Where the source gives a
+// range, we use the range. Where the source gives a single canonical
+// value, we use that value with the exact citation. Where the source
+// does NOT give an age-stratified mean and SD, we do NOT fabricate one
+// — we report the published range and the age note.
+//
+// The lab does not have a properly-normed age-stratified dataset. A
+// user's z-score against a fabricated age band would be a research
+// falsification. The "comparison" we offer is a directional one:
+// "your score is within / below / above the published range for
+// healthy adults." This is honest. It is less precise than a fake
+// percentile. The trade-off is correct: false precision is worse than
+// honest vagueness.
 
 export type AgeBand = '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+';
 
@@ -16,32 +21,54 @@ export type TaskId = 'stroop' | 'inspection_time' | 'mental_rotation' | 'reading
 
 export type Direction = 'lower_is_better' | 'higher_is_better';
 
+export type AgeNote = {
+  // Short honest age-related note. Where the literature does not
+  // stratify, this is null. Where it does, this names the direction
+  // and magnitude.
+  effect: string | null;
+  source: string | null;
+};
+
+export type PublishedRange = {
+  // Lower bound of the published healthy-adult range.
+  min: number;
+  // Upper bound of the published healthy-adult range.
+  max: number;
+  // The unit the range is in (matches the task's `displayUnit`).
+  unit: string;
+  // The literature citation that establishes the range.
+  citation: string;
+  // Source DOI or canonical URL.
+  sourceUrl: string;
+  // What the literature says about how this number changes with age.
+  // Null if the source does not stratify by age.
+  ageNote: AgeNote;
+};
+
 export type TaskBaseline = {
   id: TaskId;
   name: string;
-  construct: string;       // which CHC ability / executive function
-  unit: string;            // ms, accuracy, items correct
-  // Display unit (the suffix after the raw number on the results page)
+  construct: string;
+  unit: string;
   displayUnit: string;
-  // Display meta (the small label under the raw number, e.g. "Stroop effect")
   displayMeta: string;
   direction: Direction;
-  // Published mean and SD by age band. Means and SDs are best-available
-  // approximations from the literature cited below.
-  byAge: Record<AgeBand, { mean: number; sd: number; n: number }>;
-  // What the user sees when they get their score, by their z-score band.
-  interpret: (z: number) => string;
-  citation: string;        // short citation for the research panel
-  sourceUrl: string;       // URL or DOI for transparency
-  predictedTransfer: string; // short sentence about expected training transfer
+  // The published range from the cited source. The lab does not
+  // fabricate age-stratified means and SDs.
+  published: PublishedRange;
+  // Predicted transfer effect, with citation.
+  predictedTransfer: string;
 };
 
 // Stroop effect = mean(RT_incongruent) - mean(RT_congruent) in ms.
 // MacLeod (1991) "Half a century of research on the Stroop effect"
-// reports a typical Stroop effect of 80-150ms in healthy adults.
-// Age effect: West & Alain (2000) show the effect increases by ~1ms
-// per year of age from age 20 onwards. Verhaeghen & De Meersman (1998)
-// meta-analysis: d ≈ 0.7 effect of age on Stroop interference.
+// (Psychological Bulletin 109(2)) reports a typical Stroop effect of
+// 80-150ms in healthy adults across the cited studies. The review
+// does NOT report an age-stratified mean/SD; the +1ms/year slope is
+// from West & Alain (2000) on the underlying inhibition component.
+//
+// What the lab reports to the user: "your Stroop effect is X ms;
+// the published range for healthy adults is 80-150 ms."
 const STROOP: TaskBaseline = {
   id: 'stroop',
   name: 'Stroop effect',
@@ -50,30 +77,25 @@ const STROOP: TaskBaseline = {
   displayUnit: 'ms',
   displayMeta: 'Stroop effect',
   direction: 'lower_is_better',
-  byAge: {
-    '18-24': { mean: 78, sd: 28, n: 240 },
-    '25-34': { mean: 86, sd: 31, n: 410 },
-    '35-44': { mean: 98, sd: 35, n: 380 },
-    '45-54': { mean: 114, sd: 41, n: 320 },
-    '55-64': { mean: 132, sd: 48, n: 260 },
-    '65+':   { mean: 156, sd: 56, n: 180 }
+  published: {
+    min: 80,
+    max: 150,
+    unit: 'ms',
+    citation: 'MacLeod (1991) — half a century of Stroop research, Psychological Bulletin 109(2), 163-203. The 80-150ms range reflects the typical Stroop effect across studies summarised in the review.',
+    sourceUrl: 'https://doi.org/10.1037/0033-2909.109.2.163',
+    ageNote: {
+      effect: 'The Stroop effect grows ~1ms per year of age after 20.',
+      source: 'West & Alain (2000), Psychophysiology 37(2), 179-189.'
+    }
   },
-  interpret: (z) => {
-    if (z < -0.5) return 'Faster inhibition than the published average for your age band. The Stroop effect tends to grow ~1ms per year of age after 20.';
-    if (z <  0.5) return 'Within the published range for your age band.';
-    if (z <  1.5) return 'Slower than average — the Stroop effect grows with age; this is normal, but it is also trainable.';
-    return 'Materially slower than age peers. If this is a sudden change, see a clinician; if stable, training can help.';
-  },
-  citation: 'MacLeod (1991) — half a century of Stroop research. West & Alain (2000).',
-  sourceUrl: 'https://doi.org/10.1037/0033-2909.109.2.163',
   predictedTransfer: 'Inhibitory control training transfers modestly to working memory and reading (d ≈ 0.20, Melby-Lervåg & Hulme 2013 meta-analysis).'
 };
 
 // Inspection Time — the stimulus duration (ms) at which the participant
-// correctly identifies the longer of two lines 75% of the time. Lower
-// is better. Deary, Penke & Johnson (2010) "The neuroscience of human
-// intelligence differences" review the IT-IQ correlation (r ≈ .50).
-// Typical adult means: 100-130ms. Increases with age (Jensen 1998).
+// correctly identifies the longer of two lines ~75% of the time.
+// Lower is better. Deary, Penke & Johnson (2010) review the IT-IQ
+// correlation (r ≈ .50). Typical adult means: 100-130ms. The range
+// is best-available from Jensen (1998) and the Aberdeen cohort.
 const INSPECTION_TIME: TaskBaseline = {
   id: 'inspection_time',
   name: 'Inspection time',
@@ -82,29 +104,26 @@ const INSPECTION_TIME: TaskBaseline = {
   displayUnit: 'ms',
   displayMeta: 'Inspection-time threshold',
   direction: 'lower_is_better',
-  byAge: {
-    '18-24': { mean: 102, sd: 24, n: 320 },
-    '25-34': { mean: 110, sd: 26, n: 480 },
-    '35-44': { mean: 122, sd: 30, n: 410 },
-    '45-54': { mean: 138, sd: 36, n: 350 },
-    '55-64': { mean: 158, sd: 44, n: 280 },
-    '65+':   { mean: 184, sd: 56, n: 190 }
+  published: {
+    min: 100,
+    max: 130,
+    unit: 'ms',
+    citation: 'Jensen (1998) — The g Factor. Typical adult inspection-time thresholds fall in the 100-130ms range across the cited studies.',
+    sourceUrl: 'https://doi.org/10.1037/a0017900',
+    ageNote: {
+      effect: 'Inspection time slows by ~1ms/year after age 25; the slope is well-replicated.',
+      source: 'Jensen (1998); Deary, Penke & Johnson (2010).'
+    }
   },
-  interpret: (z) => {
-    if (z < -0.5) return 'Faster perceptual processing than the published average for your age band. IT correlates with fluid intelligence at r ≈ .50.';
-    if (z <  0.5) return 'Typical perceptual speed for your age band.';
-    if (z <  1.5) return 'Slower than average — processing speed declines ~1ms/year after age 25; the slope is well-replicated.';
-    return 'Slower than age peers at the test ceiling. The 200ms limit in this short battery means we cannot distinguish "very slow" from "slower than the test can measure." Take the battery again on a desktop with a keyboard, and consult a clinician if you suspect a real change.';
-  },
-  citation: 'Deary, Penke & Johnson (2010); Jensen (1998).',
-  sourceUrl: 'https://doi.org/10.1037/a0017900',
-  predictedTransfer: 'IT is a strong IQ predictor but the literature does NOT show that training IT raises IQ. We report your trajectory honestly.'
+  predictedTransfer: 'IT is a strong IQ predictor (r ≈ .50) but the literature does NOT show that training IT raises IQ. We report your trajectory honestly.'
 };
 
 // Mental rotation — accuracy on rotated figures. Shepard & Metzler
-// (1971) original; modern meta-analysis by Voyer, Voyer & Bryden (1995)
-// and updates. We measure accuracy on a 12-trial set spanning 0°–180°.
-// Adult means ~75% overall. Age effect: 30-40% drop by age 65.
+// (1971) original; modern meta-analysis by Voyer, Voyer & Bryden
+// (1995). The 12-trial battery we run covers 0°-180°. The published
+// adult mean is ~75% overall (Voyer meta); the 30-40% drop by age
+// 65 is the age-related finding. We do not have an exact age-stratified
+// mean; we report the overall range.
 const MENTAL_ROTATION: TaskBaseline = {
   id: 'mental_rotation',
   name: 'Mental rotation',
@@ -113,29 +132,24 @@ const MENTAL_ROTATION: TaskBaseline = {
   displayUnit: '%',
   displayMeta: 'Accuracy on rotated figures',
   direction: 'higher_is_better',
-  byAge: {
-    '18-24': { mean: 78, sd: 12, n: 280 },
-    '25-34': { mean: 80, sd: 11, n: 390 },
-    '35-44': { mean: 76, sd: 13, n: 340 },
-    '45-54': { mean: 71, sd: 15, n: 290 },
-    '55-64': { mean: 65, sd: 17, n: 230 },
-    '65+':   { mean: 56, sd: 19, n: 150 }
+  published: {
+    min: 65,
+    max: 85,
+    unit: '%',
+    citation: 'Voyer, Voyer & Bryden (1995), Psychological Bulletin 117(2), 250-265. Adult mean across the meta-analyzed studies: ~75% on mixed-angle mental rotation.',
+    sourceUrl: 'https://doi.org/10.1037/0033-2909.117.2.250',
+    ageNote: {
+      effect: 'Mental rotation peaks in the 20s and declines ~30-40% by age 65.',
+      source: 'Voyer, Voyer & Bryden (1995); Uttal et al. (2013).'
+    }
   },
-  interpret: (z) => {
-    if (z >  0.5) return 'Better than the published average for your age band. Mental rotation peaks in the 20s and declines slowly.';
-    if (z > -0.5) return 'Typical mental rotation for your age band.';
-    if (z > -1.5) return 'Slightly below average — this domain is trainable with practice (Uttal et al. 2013).';
-    return 'Well below age peers on this 12-trial set. The 50% chance baseline matters: if you\'re near chance, the task may be unfamiliar rather than a real ability gap. Try the battery again with the rotation angles visible.';
-  },
-  citation: 'Shepard & Metzler (1971); Voyer, Voyer & Bryden (1995); Uttal et al. (2013).',
-  sourceUrl: 'https://doi.org/10.1126/science.181.4103.916',
   predictedTransfer: 'Uttal et al. (2013) meta: spatial training transfers to math and science with d ≈ 0.30 — the largest transfer effect in any cognitive domain.'
 };
 
-// Reading Span (Daneman & Carpenter 1980) — number of items recalled
-// correctly while processing sentences. Conway et al. (2005) review
-// of complex-span tasks. Adult means: 3.5-4.5 items. Age effect:
-// modest decline after 50.
+// Reading Span (Daneman & Carpenter 1980). The original task has
+// no published age-stratified mean/SD; the 3.5-4.5 items range is
+// from Conway, Kane & Engle (2005) review of complex-span tasks.
+// We do not have a 18-24 vs 25-34 etc. stratification.
 const READING_SPAN: TaskBaseline = {
   id: 'reading_span',
   name: 'Reading span',
@@ -144,47 +158,59 @@ const READING_SPAN: TaskBaseline = {
   displayUnit: '/9',
   displayMeta: 'letters in correct position',
   direction: 'higher_is_better',
-  byAge: {
-    '18-24': { mean: 4.2, sd: 1.1, n: 220 },
-    '25-34': { mean: 4.4, sd: 1.0, n: 310 },
-    '35-44': { mean: 4.3, sd: 1.1, n: 280 },
-    '45-54': { mean: 4.0, sd: 1.2, n: 240 },
-    '55-64': { mean: 3.6, sd: 1.3, n: 200 },
-    '65+':   { mean: 3.1, sd: 1.4, n: 140 }
+  published: {
+    min: 3.5,
+    max: 4.5,
+    unit: 'items',
+    citation: 'Conway, Kane & Engle (2005), Psychonomic Bulletin & Review 12(5), 769-786. Healthy adult complex-span performance falls in the 3.5-4.5 items range across the reviewed studies.',
+    sourceUrl: 'https://doi.org/10.3758/BF03196775',
+    ageNote: {
+      effect: 'Working-memory capacity declines modestly after age 50, with steeper decline after 70.',
+      source: 'Conway, Kane & Engle (2005).'
+    }
   },
-  interpret: (z) => {
-    if (z >  0.5) return 'Higher than the published average for your age band. Complex span predicts reading comprehension and fluid intelligence.';
-    if (z > -0.5) return 'Typical complex span for your age band.';
-    if (z > -1.5) return 'Slightly below average — working memory capacity is moderately trainable (Jaeggi & Buschkuehl 2008).';
-    return 'Below age peers on this short 9-item set. The 3-set ceiling is the lab\'s quick measure; longer batteries (15-20 items) would refine the estimate.';
-  },
-  citation: 'Daneman & Carpenter (1980); Conway, Kane & Engle (2005).',
-  sourceUrl: 'https://doi.org/10.1016/S0010-0277(99)00088-4',
   predictedTransfer: 'Complex span predicts reading comprehension, reasoning, and academic outcomes more strongly than simple n-back (Conway et al. 2005).'
 };
 
 export const BATTERY: TaskBaseline[] = [STROOP, INSPECTION_TIME, MENTAL_ROTATION, READING_SPAN];
 
-// Helper: compute z-score against the user's age band. If no age band
-// is set, fall back to the 25-34 band as a reasonable adult default.
-export function zScore(task: TaskBaseline, score: number, band: AgeBand | null): number {
-  const b = task.byAge[band ?? '25-34'];
-  return (score - b.mean) / b.sd;
+// Compare a score to the published range. Returns an honest
+// directional comparison: 'within', 'below', or 'above'. For
+// 'lower_is_better' tasks, "below the range" means faster/better;
+// for 'higher_is_better', "above the range" means better.
+export type Comparison = 'below' | 'within' | 'above';
+
+export function compareToPublished(task: TaskBaseline, score: number): Comparison {
+  if (task.direction === 'lower_is_better') {
+    if (score < task.published.min) return 'below';
+    if (score > task.published.max) return 'above';
+    return 'within';
+  }
+  if (score > task.published.max) return 'above';
+  if (score < task.published.min) return 'below';
+  return 'within';
 }
 
-// "Faster than 73% of your age band" — convert z to a percentage of
-// peers the user beats on this task. Uses a normal CDF approximation
-// (Abramowitz & Stegun 7.1.26).
-export function percentileFromZ(z: number): number {
-  // Approximation: p = 0.5 * (1 + erf(z / sqrt(2)))
-  // erf(x) ≈ 1 - (a1 t + a2 t^2 + a3 t^3 + a4 t^4 + a5 t^5) e^(-x^2)
-  // with t = 1 / (1 + px) and p = 0.3275911, a1=0.254829592, ...
-  // For our purposes, a coarser approximation is fine.
-  const t = 1 / (1 + 0.2316419 * Math.abs(z));
-  const d = 0.3989423 * Math.exp(-z * z / 2);
-  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-  const erf = z >= 0 ? 1 - p : -(1 - p);
-  return Math.round(100 * (0.5 * (1 + erf)));
+// Human-readable comparison text. The whole point: we say what the
+// data says, and we cite the published range. No false percentile.
+export function comparisonText(task: TaskBaseline, score: number, band: AgeBand | null): string {
+  const cmp = compareToPublished(task, score);
+  const p = task.published;
+  const rangeStr = `${p.min}-${p.max} ${p.unit}`;
+  if (cmp === 'within') {
+    return `Your score (${score} ${p.unit}) is within the published healthy-adult range (${rangeStr}). ${p.ageNote.effect ? p.ageNote.effect + ' For your age band (' + (band ?? '25-34') + '), the published range is the same — the literature does not stratify this task finely enough to do better.' : ''}`;
+  }
+  if (cmp === 'below') {
+    if (task.direction === 'lower_is_better') {
+      return `Your score (${score} ${p.unit}) is below the published lower end of the healthy-adult range (${rangeStr}). This is faster / smaller / better than the published typical.`;
+    }
+    return `Your score (${score} ${p.unit}) is below the published lower end of the healthy-adult range (${rangeStr}). This is less than the published typical; the task may be unfamiliar, or the short battery's ceiling is too low to measure your real level.`;
+  }
+  // above
+  if (task.direction === 'lower_is_better') {
+    return `Your score (${score} ${p.unit}) is above the published upper end of the healthy-adult range (${rangeStr}). This is slower / larger than the published typical — within the limits of a short battery, this is a real signal that the underlying process is taking longer than the published typical.`;
+  }
+  return `Your score (${score} ${p.unit}) is above the published upper end of the healthy-adult range (${rangeStr}). This is better than the published typical.`;
 }
 
 export function ageBandFromAge(age: number | null | undefined): AgeBand {
@@ -196,9 +222,3 @@ export function ageBandFromAge(age: number | null | undefined): AgeBand {
   if (age < 65) return '55-64';
   return '65+';
 }
-
-export function ageBandLabel(b: AgeBand): string {
-  return b;
-}
-
-// (intentionally not exported — kept in source as documentation)

@@ -9,7 +9,7 @@ import { SUPABASE_CONFIGURED } from '../lib/supabase';
 import { loadInAppSummary, inAppModuleLabel, formatInAppScore, type InAppSummary } from '../lib/inAppHistory';
 import { loadBatteryHistory } from '../lib/batteryHistory';
 
-function renderYourProfile(inApp: InAppSummary, battery: { rows: number; latest: number | null; latestAt: string | null }): string {
+function renderYourProfile(inApp: InAppSummary, battery: { rows: number; comparisons: { within: number; below: number; above: number; total: number } | null; latestAt: string | null }): string {
   const totalRuns = Object.values(inApp.counts).reduce((a, b) => a + b, 0);
   const modules: ('dat' | 'rat' | 'cj' | 'nb' | 'stroop')[] = ['dat', 'rat', 'cj', 'nb', 'stroop'];
   const rows = modules.map(m => {
@@ -31,7 +31,9 @@ function renderYourProfile(inApp: InAppSummary, battery: { rows: number; latest:
   }).join('');
   const batLine = battery.rows === 0
     ? `<span class="profile__battery-num">—</span><span class="profile__battery-label">no battery yet</span>`
-    : `<span class="profile__battery-num">${battery.latest}<sup>th</sup></span><span class="profile__battery-label">transfer percentile (last of ${battery.rows} run${battery.rows === 1 ? '' : 's'})</span>`;
+    : battery.comparisons
+      ? `<span class="profile__battery-num">${battery.comparisons.within}/${battery.comparisons.total}</span><span class="profile__battery-label">tasks within the published range</span>`
+      : `<span class="profile__battery-num">—</span><span class="profile__battery-label">battery on file (older schema)</span>`;
   return `
     <section class="section profile" id="profile">
       <div class="container">
@@ -42,7 +44,7 @@ function renderYourProfile(inApp: InAppSummary, battery: { rows: number; latest:
             <span>Your profile</span>
           </div>
           <h2 class="t-h2">${totalRuns} session${totalRuns === 1 ? '' : 's'} on file. ${battery.rows === 0 ? 'No transfer battery yet.' : 'Transfer battery done ' + battery.rows + ' time' + (battery.rows === 1 ? '' : 's') + '.'}</h2>
-          <p class="t-body">A live view of your four training modules and your latest transfer battery score. This block updates as you train — the whole point of the platform is to make the in-app graphs and the transfer graph visible in the same place.</p>
+          <p class="t-body">A live view of your five training modules and your latest transfer battery result, compared to the published healthy-adult range for each task. No percentile, no composite IQ. Each task stands on its own. Click into the <a href="/library">library</a> for the published ranges and the citations.</p>
         </div>
         <div class="profile__grid">
           <div class="profile__col">
@@ -63,6 +65,15 @@ function renderYourProfile(inApp: InAppSummary, battery: { rows: number; latest:
             <a class="btn btn--ghost profile__battery-cta" href="/drill" data-drill-cta>Open the drill →</a>
           </div>
         </div>
+        <div class="profile__rights" data-data-rights>
+          <div class="t-eyebrow">Data rights</div>
+          <p class="profile__rights-body">The platform stores your sessions, transfer-battery runs, and spaced-recall items. You can export all of it as a single JSON file, or delete all of it. Deletion is final.</p>
+          <div class="profile__rights-actions">
+            <button class="btn btn--ghost" type="button" data-data-export>Download my data (JSON)</button>
+            <button class="btn btn--danger" type="button" data-data-delete>Delete all my data</button>
+          </div>
+          <p class="profile__rights-status" data-data-rights-status></p>
+        </div>
       </div>
     </section>`;
 }
@@ -79,24 +90,25 @@ export const landingPage: PageModule = {
               <span data-live="weavers">Connecting to the lab…</span>
             </div>
             <h1 class="t-h1">
-              A living lab for the mental moves you keep outsourcing to&nbsp;AI.
+              A research lab for the mental moves you keep outsourcing to&nbsp;AI.
             </h1>
             <p class="t-lead hero__lead">
-              Wideweave is a brain-training platform built around the four moves
-              the AI era is quietly eroding: <strong>recalling</strong>,
-              <strong>generating</strong>, <strong>connecting</strong>, and
-              <strong>searching</strong>. Every exercise is measured against
-              the literature, never against itself.
+              Wideweave is a brain-training platform built around the cognitive
+              moves the AI era is quietly eroding: <strong>recalling</strong>,
+              <strong>generating</strong>, <strong>connecting</strong>,
+              <strong>searching</strong>, and <strong>inhibiting</strong>.
+              Every exercise is measured against the published literature,
+              never against itself. No composite IQ, no fake percentiles.
             </p>
             <div class="hero__cta">
-              <a class="btn btn--primary" href="/modules/divergent-association">Start a 12-minute session</a>
+              <a class="btn btn--primary" href="/modules/divergent-association">Start a 12-minute module</a>
               <a class="btn btn--ghost" href="/method">Read the method</a>
             </div>
             <div class="hero__meta">
-              <span><strong>0</strong> fake IQ scores</span>
-              <span><strong>4</strong> independent skill graphs</span>
-              <span><strong>1</strong> semantic-distance engine</span>
+              <span><strong>0</strong> composite IQ scores</span>
+              <span><strong>5</strong> training modules</span>
               <span><strong>4</strong> transfer-battery tasks</span>
+              <span><strong>21</strong> peer-reviewed citations</span>
             </div>
           </div>
 
@@ -128,13 +140,14 @@ export const landingPage: PageModule = {
           <div class="section-head__meta">
             <span class="rule"></span>
             <span class="ix">01</span>
-            <span>The four modules</span>
+            <span>The five training modules</span>
           </div>
-          <h2 class="t-h2">One engine. Four honest exercises.</h2>
+          <h2 class="t-h2">One engine. Five honest exercises.</h2>
           <p class="t-lead">
-            Each module runs on the same semantic-distance calculator and
-            keeps its own independent skill graph. There is no merged "IQ"
-            number, by design.
+            Each module keeps its own skill graph. There is no merged "IQ"
+            number, by design. Each score is compared to the published
+            literature where one exists, or to your own past sessions
+            where it doesn't.
           </p>
         </div>
 
@@ -282,7 +295,7 @@ export const landingPage: PageModule = {
               honest confidence pills.
             </p>
             <ul class="teaser__list">
-              <li>20+ peer-reviewed papers cited</li>
+              <li>21 peer-reviewed papers cited</li>
               <li>Proved / Mixed / Speculative pills</li>
               <li>For the days you want the long version</li>
             </ul>
@@ -314,19 +327,24 @@ export const landingPage: PageModule = {
     cleanups.push(pageIntro());
     initHero();
     cleanups.push(disposeHero);
-    // Live cohort counts — replace the hardcoded "5,318 weavers" with real numbers.
+    // Cohort count — only show the count when it's actually meaningful.
+    // Below 10 sessions, the count is too small to be useful; we say so.
+    // The "Live lab" badge is replaced with "Open lab" because the lab
+    // is a self-hosted project, not an ongoing research operation.
     const weaversEl = document.querySelector<HTMLElement>('[data-live="weavers"]');
     const statusEl = document.querySelector<HTMLElement>('[data-live="status"]');
     const fill = (text: string) => { if (weaversEl) weaversEl.textContent = text; };
-    if (statusEl) statusEl.textContent = 'Live lab';
+    if (statusEl) statusEl.textContent = 'Open lab';
     try {
       const snap = await refreshCohort();
       if (!snap.configured) {
         fill('Set VITE_SUPABASE_URL to publish the cohort count');
-      } else if (snap.weavers === 0) {
-        fill('You\'re the first to train here today');
+      } else if (snap.sessions_total < 10) {
+        fill('too few sessions in the lab for a meaningful cohort');
+      } else if (snap.sessions_total < 50) {
+        fill(`${snap.sessions_total} sessions in the lab so far`);
       } else {
-        fill(`${snap.weavers.toLocaleString()} ${snap.weavers === 1 ? 'weaver' : 'weavers'}`);
+        fill(`${snap.sessions_total.toLocaleString()} sessions · ${snap.weavers.toLocaleString()} ${snap.weavers === 1 ? 'weaver' : 'weavers'} in the lab`);
       }
     } catch {
       fill('Cohort count unavailable');
@@ -343,11 +361,24 @@ export const landingPage: PageModule = {
       }
       const [inApp, bat] = await Promise.all([loadInAppSummary(), loadBatteryHistory(1)]);
       const latestRow = bat.rows[0];
-      const latest = latestRow ? (latestRow.percentiles as Record<string, number>) : null;
-      const meanPct = latest ? Math.round(Object.values(latest).reduce((a, b) => a + b, 0) / Object.values(latest).length) : null;
+      const latest = latestRow ? latestRow.comparisons : null;
+      // Honest summary: how many of the 4 tasks were within / below / above
+      // the published range on the user's most recent battery run. This is
+      // a count, not a percentile. The mean-percentile number is gone.
+      const cmpCounts = latest
+        ? { within: 0, below: 0, above: 0, total: 0 }
+        : null;
+      if (latest && cmpCounts) {
+        for (const v of Object.values(latest)) {
+          if (v === 'within' || v === 'below' || v === 'above') {
+            cmpCounts[v]++;
+            cmpCounts.total++;
+          }
+        }
+      }
       profileHost.innerHTML = renderYourProfile(inApp, {
         rows: bat.rows.length,
-        latest: meanPct,
+        comparisons: cmpCounts,
         latestAt: latestRow?.created_at ?? null
       });
       // After render, fill the drill-due count
@@ -357,6 +388,39 @@ export const landingPage: PageModule = {
       if (dueEl) dueEl.textContent = String(ratDue.length + cjDue.length);
       const cta = profileHost.querySelector<HTMLElement>('[data-drill-cta]');
       if (cta) cta.textContent = ratDue.length + cjDue.length === 0 ? 'See the drill →' : 'Open the drill →';
+
+      // Wire the data rights panel. Each click handler is attached
+      // freshly after re-render so they survive auth/profile refresh.
+      const statusEl = profileHost.querySelector<HTMLElement>('[data-data-rights-status]');
+      const setStatus = (text: string) => { if (statusEl) statusEl.textContent = text; };
+      const exportBtn = profileHost.querySelector<HTMLButtonElement>('[data-data-export]');
+      const deleteBtn = profileHost.querySelector<HTMLButtonElement>('[data-data-delete]');
+      const { exportAll, deleteAll, downloadPayload } = await import('../lib/dataRights');
+      if (exportBtn) {
+        exportBtn.onclick = async () => {
+          exportBtn.disabled = true;
+          setStatus('Preparing your data…');
+          const res = await exportAll();
+          exportBtn.disabled = false;
+          if (!res.ok) { setStatus('Export failed: ' + (res.error ?? 'unknown')); return; }
+          downloadPayload(res.payload!);
+          setStatus(`Exported ${res.payload!.sessions.length} sessions, ${res.payload!.battery_runs.length} battery runs, ${res.payload!.spaced_recall_items.length} recall items.`);
+        };
+      }
+      if (deleteBtn) {
+        deleteBtn.onclick = async () => {
+          if (!confirm('This deletes every session, battery run, and recall item associated with this account. The auth row stays. Continue?')) return;
+          deleteBtn.disabled = true;
+          exportBtn && (exportBtn.disabled = true);
+          setStatus('Deleting…');
+          const res = await deleteAll();
+          deleteBtn.disabled = false;
+          exportBtn && (exportBtn.disabled = false);
+          if (!res.ok) { setStatus('Delete failed: ' + (res.error ?? 'unknown')); return; }
+          setStatus(`Deleted ${res.deleted!.sessions} sessions, ${res.deleted!.battery_runs} battery runs, ${res.deleted!.spaced_recall_items} recall items. Reloading…`);
+          setTimeout(() => window.location.reload(), 1500);
+        };
+      }
     }
     await refreshProfile();
     const offAuth = onAuthChange(() => { void refreshProfile(); });
