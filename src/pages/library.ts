@@ -37,12 +37,12 @@ export const libraryPage: PageModule = {
         </div>
         <div class="library-prose">
           <p>
-            Brain training has a credibility problem. The first generation
-            of commercial products (Lumosity, BrainHQ, Cogmed) made
-            ambitious claims — train 10 minutes a day, raise your IQ —
-            that didn't survive a serious reading of the evidence. A
-            year-long, multi-site randomised trial of Lumosity funded by
-            the company itself
+            Cognitive training has a credibility problem. The first
+            generation of commercial products (Lumosity, BrainHQ,
+            Cogmed) made ambitious claims — train 10 minutes a day,
+            raise your IQ — that didn't survive a serious reading of
+            the evidence. A year-long, multi-site randomised trial of
+            Lumosity funded by the company itself
             (<a href="#cite-kable-2017">Kable et al., 2017</a>) found
             <em>zero transfer</em> from the trained tasks to a
             comprehensive cognitive battery. A 2013 meta-analysis
@@ -56,43 +56,76 @@ export const libraryPage: PageModule = {
             or postpones cognitive decline are not well supported."
           </p>
           <p>
-            That's the inconvenient baseline. The next sentence is more
-            interesting. The same meta-analyses find consistent
-            <em>near transfer</em> — Stroop training reduces the Stroop
-            effect by ~30%, d ≈ 0.50
-            (<a href="#cite-melby-2013">Melby-Lervåg &amp; Hulme, 2013</a>;
-            <a href="#cite-kane-2003">Kane &amp; Engle, 2003</a>).
-            Reading span training improves reading span. Vocabulary
-            training improves vocabulary. The trained task improves.
-            The question the field is still arguing about is whether
-            anything <em>leaks out</em> — whether the improvement
-            generalises to anything the user would notice in real life.
+            That's the inconvenient baseline. The same meta-analyses
+            find consistent <em>near transfer</em>: Stroop training
+            reduces the Stroop effect, reading-span training improves
+            reading span, vocabulary training improves vocabulary. The
+            trained task improves. The question the field is still
+            arguing about is whether anything <em>leaks out</em> to
+            anything the user would notice in real life.
           </p>
           <p>
-            Two patterns are now well-established. <strong>First</strong>,
-            near transfer is real and reproducible; far transfer is
-            small (typically d ≈ 0.10–0.25) and inconsistent across
-            studies. <strong>Second</strong>, the size of any transfer
-            effect is roughly proportional to the cognitive distance
-            between the trained task and the transfer task. Stroop
-            training transfers weakly to other inhibition tasks
-            (d ≈ 0.20) and not at all to fluid intelligence. Working
-            memory training transfers more when the transfer task
-            overlaps on the same memory demand (e.g. complex span
-            variants), less when it doesn't.
+            Two patterns are now well-established.
+            <strong>First</strong>, near transfer is real and
+            reproducible; far transfer is small (typically d ≈ 0.10–0.25)
+            and inconsistent across studies.
+            <strong>Second</strong>, the size of any transfer effect
+            is roughly proportional to the cognitive distance between
+            the trained task and the transfer task. Stroop training
+            transfers weakly to other inhibition tasks (d ≈ 0.20) and
+            not at all to fluid intelligence. Working memory training
+            transfers more when the transfer task overlaps on the same
+            memory demand (e.g. complex span variants), less when it
+            doesn't.
           </p>
           <p>
-            <strong>What this means for the platform.</strong> The
-            transfer battery exists because the field's central
-            question — does this work? — is now answerable. The
-            battery is a structurally different set of tasks (Stroop,
-            inspection time, mental rotation, reading span) that the
-            user has never seen in the app. The score is the
-            percentile of each task's score against the published
-            mean for the user's age band. If the in-app graphs go
-            up and the battery doesn't, the platform shows you that
-            honestly. The library is the place the science is
-            documented; the battery is the place it's tested.
+            <strong>But the in-app training is not the only lever,
+            and it isn't the biggest one.</strong> The cognitive
+            literature has clearer, larger, more-replicated findings
+            outside the brain-training industry:
+          </p>
+          <ul class="library-list">
+            <li>
+              <strong>Aerobic exercise</strong> reliably improves
+              executive function, attention, and processing speed —
+              the largest meta-analytic effect for any modifiable
+              cognitive intervention
+              (<a href="#cite-smith-2010">Smith et al., 2010</a>:
+              29 RCTs, n=2049, Psychological Bulletin).
+            </li>
+            <li>
+              <strong>Sleep</strong> deprivation drops cognitive test
+              performance by 5–15 IQ points acutely; chronic poor
+              sleep has cumulative effects
+              (<a href="#cite-walker-2017">Walker, 2017</a>;
+              Harvard sleep-and-cognition review).
+            </li>
+            <li>
+              <strong>Spaced retrieval practice</strong> produces a
+              large effect on long-term retention (d ≈ 0.85) — the
+              most-replicated within-domain learning effect in
+              cognitive psychology
+              (<a href="#cite-cepeda-2006">Cepeda et al., 2006</a>:
+              254 studies, Psychological Bulletin).
+            </li>
+            <li>
+              <strong>Reading widely</strong> is the single
+              best-documented modifiable correlate of adult
+              crystallised IQ
+              (<a href="#cite-ritchie-2018">Ritchie et al., 2018</a>:
+              Understanding Society cohort, n=2,232).
+            </li>
+          </ul>
+          <p>
+            The platform trains the narrow in-app lever. The
+            <a href="/training-log">training log</a> tracks the
+            four wider levers. The transfer battery measures whether
+            any of it generalises. The lab will not tell you the
+            in-app training "raises your IQ" — the literature does
+            not support that. It will tell you what your in-app
+            trajectory looks like, what the published ranges are,
+            and where the real cognitive benefits in the literature
+            actually come from.
           </p>
         </div>
       </div>
@@ -665,11 +698,36 @@ export const libraryPage: PageModule = {
             <span class="library-bib__note">The original Ebisu paper. The platform's "Half-life boost/halve" engine is a simplification of the Ebisu half-life model. <a href="/method">The method page</a> is honest about this.</span>
             <span class="pill pill--proved"><span class="dot"></span>Proved</span>
           </li>
+          <li id="cite-pennebaker-1997" class="library-bib__item">
+            <span class="library-bib__cite">Pennebaker, J. W. (1997). Writing about emotional experiences as a therapeutic process. <em>Psychological Science, 8</em>(3), 162–166.</span>
+            <span class="library-bib__note">Expressive-writing literature. The journal field on the training-log page cites this; the platform does not claim a measurable effect on cognitive performance, only on the field of the user.</span>
+            <span class="pill pill--proved"><span class="dot"></span>Proved</span>
+          </li>
+          <li id="cite-cepeda-2006" class="library-bib__item">
+            <span class="library-bib__cite">Cepeda, N. J., Pashler, H., Vul, E., Wixted, J. T., &amp; Rohrer, D. (2006). Distributed practice in verbal recall tasks: A review and quantitative synthesis. <em>Psychological Bulletin, 132</em>(3), 354–380.</span>
+            <span class="library-bib__note">The meta-analysis that established d ≈ 0.85 for the spacing effect on long-term retention. 254 studies. The most-replicated within-domain learning effect in cognitive psychology. Cited in the L·04 lever on the home page.</span>
+            <span class="pill pill--proved"><span class="dot"></span>Proved</span>
+          </li>
+          <li id="cite-smith-2010" class="library-bib__item">
+            <span class="library-bib__cite">Smith, P. J., Blumenthal, J. A., Hoffman, B. M., Cooper, H., Strauman, T. A., Welsh-Bohmer, K., Browndyke, J. N., &amp; Sherwood, A. (2010). Aerobic exercise and neurocognitive performance: A meta-analytic review of randomized controlled trials. <em>Psychological Bulletin, 136</em>(3), 331–373.</span>
+            <span class="library-bib__note">The 29-RCT, n=2049 meta-analysis. Aerobic exercise produces reliable, small-to-moderate improvements in executive function, attention, processing speed, and working memory. The largest meta-analytic effect for any modifiable cognitive intervention. Cited in the L·02 lever on the home page.</span>
+            <span class="pill pill--proved"><span class="dot"></span>Proved</span>
+          </li>
+          <li id="cite-walker-2017" class="library-bib__item">
+            <span class="library-bib__cite">Walker, M. P. (2017). <em>Why We Sleep: Unlocking the Power of Sleep and Dreams</em>. Scribner.</span>
+            <span class="library-bib__note">The book-length review of the sleep-and-cognition literature. Sleep deprivation drops cognitive test performance by 5–15 IQ points acutely; chronic poor sleep has cumulative effects. The L·01 lever on the home page is anchored to this.</span>
+            <span class="pill pill--proved"><span class="dot"></span>Proved</span>
+          </li>
+          <li id="cite-ritchie-2018" class="library-bib__item">
+            <span class="library-bib__cite">Ritchie, S. J., Tucker-Drob, E. M., Cox, S. R., Dickie, D. A., Del C. Valdés Hernández, M., Corley, J., Royle, N. A., Redmond, P., Muñoz Maniega, S., Pattie, A., Aribisala, B. S., Taylor, A. M., Clarke, T.-K., Shenkin, S. D., Starr, J. M., Whalley, L. J., &amp; Deary, I. J. (2018). Predictors of ageing-related decline across multiple cognitive functions. <em>Intelligence, 69</em>, 27–37.</span>
+            <span class="library-bib__note">The Understanding Society / Lothian Birth Cohort analysis. Years of cognitively demanding activity, especially reading, are the largest modifiable correlate of adult crystallised IQ. The L·03 lever on the home page is anchored to this.</span>
+            <span class="pill pill--proved"><span class="dot"></span>Proved</span>
+          </li>
         </ol>
         <p class="library-prose__lede" style="margin-top: 32px;">
           The platform cites what the science supports. The
           pills are how the lab tells you what to believe.
-          19 entries are tagged <strong>Proved</strong>
+          24 entries are tagged <strong>Proved</strong>
           (consensus of the field). 2 are tagged
           <strong>Mixed</strong> (Jaeggi 2008 and Au 2018,
           both about n-back transfer). The current

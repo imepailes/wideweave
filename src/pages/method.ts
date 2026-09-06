@@ -165,8 +165,18 @@ export const methodPage: PageModule = {
         <div class="cta__inner">
           <span class="t-eyebrow">Try the loop</span>
           <h2>One module. 12 minutes. The whole loop, end to end.</h2>
+          <p class="cta__body">
+            The lab is honest about effect sizes. The in-app training
+            has small, narrow effects — your within-task skill graphs
+            will go up, and the transfer battery will tell you whether
+            any of it generalises. The four lifestyle levers (sleep,
+            exercise, reading, spaced retrieval) have the largest
+            meta-analytic effect sizes in the cognitive literature.
+            Both are part of the platform.
+          </p>
           <div class="cta__actions">
             <a class="btn btn--primary" href="/modules/divergent-association">Start a 12-minute session</a>
+            <a class="btn btn--ghost" href="/training-log">Log the four levers</a>
             <a class="btn btn--ghost" href="/transfer">See the transfer battery</a>
           </div>
         </div>

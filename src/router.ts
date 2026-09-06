@@ -18,7 +18,8 @@ const routes: Record<string, () => Promise<PageModule>> = {
   '/method': () => import('./pages/method').then((m) => m.methodPage),
   '/transfer': () => import('./pages/transfer').then((m) => m.transferPage),
   '/principles': () => import('./pages/principles').then((m) => m.principlesPage),
-  '/about': () => import('./pages/about').then((m) => m.aboutPage)
+  '/about': () => import('./pages/about').then((m) => m.aboutPage),
+  '/training-log': () => import('./pages/trainingLog').then((m) => m.trainingLogPage)
 };
 
 let currentDispose: (() => void) | null = null;

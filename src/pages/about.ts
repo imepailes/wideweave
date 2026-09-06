@@ -45,11 +45,14 @@ export const aboutPage: PageModule = {
             you no longer notice what you no longer do.
           </p>
           <p>
-            Wideweave exists to keep those four moves alive. The lab is
-            explicit about the evidence and explicit about the
+            Wideweave exists to keep those cognitive moves alive. The
+            lab is explicit about the evidence and explicit about the
             overclaim. The interface is built to make generation easy
             and outsourcing hard, with measurement that tells you the
-            truth about whether it is working.
+            truth about whether it is working — and with an honest
+            ranking of which interventions the literature actually
+            shows move the needle (the four lifestyle levers, not
+            the in-app training).
           </p>
         </div>
       </div>

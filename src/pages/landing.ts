@@ -9,7 +9,7 @@ import { SUPABASE_CONFIGURED } from '../lib/supabase';
 import { loadInAppSummary, inAppModuleLabel, formatInAppScore, type InAppSummary } from '../lib/inAppHistory';
 import { loadBatteryHistory } from '../lib/batteryHistory';
 
-function renderYourProfile(inApp: InAppSummary, battery: { rows: number; comparisons: { within: number; below: number; above: number; total: number } | null; latestAt: string | null }): string {
+function renderYourProfile(inApp: InAppSummary, battery: { rows: number; comparisons: { within: number; below: number; above: number; total: number } | null; latestAt: string | null }, todayLog: { slept: boolean | null; exercised: boolean | null; pages: number; logged: boolean }): string {
   const totalRuns = Object.values(inApp.counts).reduce((a, b) => a + b, 0);
   const modules: ('dat' | 'rat' | 'cj' | 'nb' | 'stroop')[] = ['dat', 'rat', 'cj', 'nb', 'stroop'];
   const rows = modules.map(m => {
@@ -45,6 +45,24 @@ function renderYourProfile(inApp: InAppSummary, battery: { rows: number; compari
           </div>
           <h2 class="t-h2">${totalRuns} session${totalRuns === 1 ? '' : 's'} on file. ${battery.rows === 0 ? 'No transfer battery yet.' : 'Transfer battery done ' + battery.rows + ' time' + (battery.rows === 1 ? '' : 's') + '.'}</h2>
           <p class="t-body">A live view of your five training modules and your latest transfer battery result, compared to the published healthy-adult range for each task. No percentile, no composite IQ. Each task stands on its own. Click into the <a href="/library">library</a> for the published ranges and the citations.</p>
+        </div>
+        <div class="profile__today">
+          <span class="t-eyebrow">Today</span>
+          <div class="profile__today-grid">
+            <div class="profile__today-stat ${todayLog.slept === true ? 'is-yes' : todayLog.slept === false ? 'is-no' : 'is-none'}">
+              <span class="profile__today-num">${todayLog.slept === true ? '✓' : todayLog.slept === false ? '—' : '?'}</span>
+              <span class="profile__today-label">Slept 7+ hrs</span>
+            </div>
+            <div class="profile__today-stat ${todayLog.exercised === true ? 'is-yes' : todayLog.exercised === false ? 'is-no' : 'is-none'}">
+              <span class="profile__today-num">${todayLog.exercised === true ? '✓' : todayLog.exercised === false ? '—' : '?'}</span>
+              <span class="profile__today-label">20+ min aerobic</span>
+            </div>
+            <div class="profile__today-stat ${todayLog.pages > 0 ? 'is-yes' : 'is-none'}">
+              <span class="profile__today-num">${todayLog.pages > 0 ? todayLog.pages : '?'}</span>
+              <span class="profile__today-label">pages read</span>
+            </div>
+          </div>
+          <a class="btn btn--ghost profile__today-cta" href="/training-log">${todayLog.logged ? 'Update today' : 'Log today →'}</a>
         </div>
         <div class="profile__grid">
           <div class="profile__col">
@@ -90,23 +108,29 @@ export const landingPage: PageModule = {
               <span data-live="weavers">Connecting to the lab…</span>
             </div>
             <h1 class="t-h1">
-              A research lab for the mental moves you keep outsourcing to&nbsp;AI.
+              The lab trains the narrow moves. The four lifestyle levers do most of the work.
             </h1>
             <p class="t-lead hero__lead">
-              Wideweave is a brain-training platform built around the cognitive
-              moves the AI era is quietly eroding: <strong>recalling</strong>,
-              <strong>generating</strong>, <strong>connecting</strong>,
-              <strong>searching</strong>, and <strong>inhibiting</strong>.
-              Every exercise is measured against the published literature,
-              never against itself. No composite IQ, no fake percentiles.
+              The cognitive-training literature is clear about
+              <strong>what works and what doesn't</strong>. Aerobic
+              exercise, sleep, reading, and consistent retrieval
+              practice are where the field has the most reliable
+              evidence — Smith (2010), Walker (2017), Cepeda (2006),
+              Ritchie (2018). The in-app training on this platform
+              trains 5 narrow cognitive moves with real but small
+              effects. The training log tracks the four lifestyle
+              levers that move the needle most. The transfer battery
+              measures whether any of it generalises. No composite
+              IQ, no fake percentiles, no leaderboard.
             </p>
             <div class="hero__cta">
-              <a class="btn btn--primary" href="/modules/divergent-association">Start a 12-minute module</a>
-              <a class="btn btn--ghost" href="/method">Read the method</a>
+              <a class="btn btn--primary" href="/training-log">Log today (60 seconds)</a>
+              <a class="btn btn--ghost" href="/modules/divergent-association">Start an in-app module</a>
             </div>
             <div class="hero__meta">
               <span><strong>0</strong> composite IQ scores</span>
               <span><strong>5</strong> training modules</span>
+              <span><strong>4</strong> lifestyle levers with the strongest evidence</span>
               <span><strong>4</strong> transfer-battery tasks</span>
               <span><strong>21</strong> peer-reviewed citations</span>
             </div>
@@ -236,6 +260,90 @@ export const landingPage: PageModule = {
             </div>
             <span class="module-index__cta">Open the module<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></span>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section levers" id="levers">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-head__meta">
+            <span class="rule"></span>
+            <span class="ix">02</span>
+            <span>The four levers the literature actually shows work</span>
+          </div>
+          <h2 class="t-h2">In-app training is the narrow lever. The four below are the wider ones.</h2>
+          <p class="t-lead">
+            The lab exists to be honest about effect sizes. The
+            biggest, most-replicated cognitive improvements in the
+            literature come from lifestyle, not from brain training
+            apps. This is not a marketing caveat — it is the field's
+            actual finding, with citations.
+          </p>
+        </div>
+        <div class="levers__grid">
+          <article class="lever">
+            <div class="lever__head">
+              <span class="lever__num">L·01</span>
+              <span class="pill pill--proved"><span class="dot"></span>Strongest effect</span>
+            </div>
+            <h3 class="lever__title">Sleep 7+ hours</h3>
+            <p class="lever__body">
+              Sleep deprivation drops cognitive test performance by
+              5–15 IQ points acutely. Chronic poor sleep has
+              cumulative effects. The lab cannot fix this for you,
+              but it can show the trajectory of "days I slept 7+"
+              next to your in-app scores.
+            </p>
+            <p class="lever__cite">Walker (2017), Why We Sleep; Harvard sleep-and-cognition review.</p>
+          </article>
+          <article class="lever">
+            <div class="lever__head">
+              <span class="lever__num">L·02</span>
+              <span class="pill pill--proved"><span class="dot"></span>Largest meta-analytic effect</span>
+            </div>
+            <h3 class="lever__title">Aerobic exercise</h3>
+            <p class="lever__body">
+              30+ minutes of moderate aerobic exercise, 3-4x per
+              week, produces reliable, small-to-moderate improvements
+              in executive function, attention, and processing speed.
+              This is the single most-replicated modifiable cognitive
+              booster in the literature.
+            </p>
+            <p class="lever__cite">Smith et al. (2010), Psychological Bulletin meta-analysis, 29 RCTs, n=2049.</p>
+          </article>
+          <article class="lever">
+            <div class="lever__head">
+              <span class="lever__num">L·03</span>
+              <span class="pill pill--proved"><span class="dot"></span>Largest modifiable IQ correlate</span>
+            </div>
+            <h3 class="lever__title">Read widely</h3>
+            <p class="lever__body">
+              Crystallised IQ is the most reliably improvable part of
+              intelligence, and reading is the single best-documented
+              way to do it. The platform does not measure reading
+              gains — it just gives you a place to log the pages.
+            </p>
+            <p class="lever__cite">Ritchie et al. (2018), Understanding Society cohort, n=2,232.</p>
+          </article>
+          <article class="lever">
+            <div class="lever__head">
+              <span class="lever__num">L·04</span>
+              <span class="pill pill--proved"><span class="dot"></span>Most reliable learning effect</span>
+            </div>
+            <h3 class="lever__title">Spaced retrieval practice</h3>
+            <p class="lever__body">
+              Cepeda et al. (2006) meta-analysis: d ≈ 0.85 for the
+              spacing effect on long-term retention. This is the
+              most-replicated within-domain learning effect in the
+              lab. The platform's <a href="/drill">spaced-recall drill</a>
+              is where it lives.
+            </p>
+            <p class="lever__cite">Cepeda et al. (2006), Psychological Bulletin meta-analysis, 254 studies.</p>
+          </article>
+        </div>
+        <div class="levers__cta">
+          <a class="btn btn--primary" href="/training-log">Log today →</a>
         </div>
       </div>
     </section>
@@ -376,11 +484,17 @@ export const landingPage: PageModule = {
           }
         }
       }
+      // Pull today's training log for the "Today" block in the profile.
+      const { loadTodayLog } = await import('../lib/trainingLog');
+      const todaysLog = await loadTodayLog();
+      const todaySummary = todaysLog.entry
+        ? { slept: todaysLog.entry.sleptWell, exercised: todaysLog.entry.exercised, pages: todaysLog.entry.pagesRead, logged: true }
+        : { slept: null, exercised: null, pages: 0, logged: false };
       profileHost.innerHTML = renderYourProfile(inApp, {
         rows: bat.rows.length,
         comparisons: cmpCounts,
         latestAt: latestRow?.created_at ?? null
-      });
+      }, todaySummary);
       // After render, fill the drill-due count
       const { loadDueItems } = await import('../lib/spacedRecall');
       const [ratDue, cjDue] = await Promise.all([loadDueItems('rat', 50), loadDueItems('cj', 50)]);
