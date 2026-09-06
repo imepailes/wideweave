@@ -268,6 +268,25 @@ export const landingPage: PageModule = {
               <li>Working memory · Daneman &amp; Carpenter (1980)</li>
             </ul>
           </a>
+          <a class="teaser" href="/library">
+            <div class="teaser__head">
+              <span class="t-eyebrow">The library</span>
+              <span class="teaser__arrow" aria-hidden="true"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h10M8 3l4 4-4 4"/></svg></span>
+            </div>
+            <h3 class="t-h3">Every citation, every instrument, every honest disclaimer.</h3>
+            <p class="t-body">
+              The reading-first part of the lab. Five long-form essays:
+              what the literature actually shows about brain training,
+              the modules in detail, the transfer battery in detail,
+              the method in detail, and a 20-entry bibliography with
+              honest confidence pills.
+            </p>
+            <ul class="teaser__list">
+              <li>20+ peer-reviewed papers cited</li>
+              <li>Proved / Mixed / Speculative pills</li>
+              <li>For the days you want the long version</li>
+            </ul>
+          </a>
         </div>
       </div>
     </section>

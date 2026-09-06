@@ -12,6 +12,7 @@ export function renderHeader(currentRoute: Route): string {
   const links: Array<[string, string]> = [
     ['/modules/divergent-association', 'Modules'],
     ['/drill', 'Drill'],
+    ['/library', 'Library'],
     ['/method', 'Method'],
     ['/transfer', 'Transfer battery'],
     ['/principles', 'Principles'],
@@ -86,6 +87,7 @@ export function renderFooter(currentRoute: Route): string {
             <ul>
               <li><a href="/method">The method</a></li>
               <li><a href="/transfer">Transfer battery</a></li>
+              <li><a href="/library">The library</a></li>
               <li><a href="/drill">Spaced-recall drill</a></li>
               <li><a href="/principles">What we won't do</a></li>
               <li><a href="/about">About the lab</a></li>
